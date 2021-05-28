@@ -12,6 +12,15 @@ protected:
 
 class PlayerAi : public Ai {
 public:
+  enum PlayerState {
+    EXPLORE,
+    PICK_ITEM,
+    ATTACK_MONSTER,
+    NEXT_FLOOR
+  };
+
+  PlayerState state;
+  
   int xpLevel;
   PlayerAi();
   int getNextLevelXp();
@@ -20,6 +29,24 @@ public:
   void update(Actor *owner);
   void save(Saver &saver);
   void load(Saver &saver);
+
+  bool getExploreMove(Actor *owner, int *dx, int *dy);
+  bool getPickMove(Actor *owner, int *dx, int *dy);
+  bool getAttackMove(Actor *owner, int *dx, int *dy);
+  bool getPortalMove(Actor *owner, int *dx, int *dy);
+
+  void pickItemFromTile(Actor *owner);
+
+  bool isItemInFov(Actor *owner);
+  bool isMonsterInFov(Actor *owner);
+
+  bool isMonsterOnTile(Actor *owner, int x, int y);
+
+  bool getNextFloorPortal(Actor *owner, int *x, int *y);
+  
+  void getItemInFovPos(Actor *owner, int *x, int *y);
+  void getMonsterInFovPos(Actor *owner, int *x, int *y);
+ 
 
 protected:
   bool moveOrAttack(Actor *owner, int targetx, int targety);

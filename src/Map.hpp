@@ -23,7 +23,7 @@ public:
   void load(Saver &saver);
   void save(Saver &saver);
 
-  void addPortal(Portal *portal);
+  void addPortal(Actor *portal);
 protected:
   long seed;
   TCODRandom *rng;

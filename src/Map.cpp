@@ -105,14 +105,13 @@ void Map::dig(int x1, int y1, int x2, int y2) {
 
 void Map::createRoom(bool first, int x1, int y1, int x2, int y2, bool withActors) {
   dig(x1, y1, x2, y2);
-  if(!withActors) {
-    return;
-  }
 
   if(first) {
     entryx = (x1 + x2) / 2;
     entryy = (y1 + y2) / 2;
   } else {
+    if(!withActors)
+      return;
     TCODRandom *rng = TCODRandom::getInstance();
     int nbMonsters = rng->getInt(0, MAX_ROOM_MONSTERS);
     while(nbMonsters > 0) {
@@ -223,13 +222,11 @@ void Map::load(Saver &saver) {
   }
 }
 
-void Map::addPortal(Portal *portal) {
+void Map::addPortal(Actor *actor) {
   int x = entryx + TCODRandom::getInstance()->getInt(-2, 2);
   int y = entryy + TCODRandom::getInstance()->getInt(-2, 2);
-  Actor *portalActor = new Actor(x, y, '0', "portal", TCODColor::black);
-  portalActor->fovOnly = false;
-  portalActor->portal = portal;
-  portalActor->blocks = false;
-
-  floor->actors.push(portalActor);
+  actor->x = x;
+  actor->y = y;
+  
+  floor->actors.push(actor);
 }

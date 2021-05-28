@@ -5,6 +5,8 @@
 #include <cstdio>
 #include <sstream>
 #include <fstream>
+#include <queue>
+#include <unistd.h>
 #include "libtcod.hpp"
 
 class Actor;

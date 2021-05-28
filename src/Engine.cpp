@@ -44,7 +44,7 @@ void Engine::init() {
   player->ai = new PlayerAi();
   player->container = new Container(26);
 
-  int nbFloors = TCODRandom::getInstance()->getInt(2, 5);
+  int nbFloors = TCODRandom::getInstance()->getInt(5, 100);
 
   while(nbFloors > 0) {
     Floor *floor = new Floor();
@@ -61,17 +61,28 @@ void Engine::init() {
     if(floorIndex != floors.size() - 1) {
       nextFloor = floors.get(floorIndex + 1);
 
-      floor->map->addPortal(new Portal(floorIndex + 1,
-					      nextFloor->map->entryx,
-					      nextFloor->map->entryy));
+      Portal *portal = new Portal(floorIndex + 1,
+				  nextFloor->map->entryx,
+				  nextFloor->map->entryy);
+      Actor *actor = new Actor(0, 0, '>', "downstairs", TCODColor::darkSepia);
+      actor->portal = portal;
+      actor->fovOnly = false;
+      actor->blocks = false;
+      floor->map->addPortal(actor);
     }
 
     if(floorIndex != 0) {
       nextFloor = floors.get(floorIndex - 1);
 
-      floor->map->addPortal(new Portal(floorIndex - 1,
-					      nextFloor->map->entryx,
-					      nextFloor->map->entryy));
+
+      Portal *portal = new Portal(floorIndex - 1,
+				  nextFloor->map->entryx,
+				  nextFloor->map->entryy);
+      Actor *actor = new Actor(0, 0, '<', "upstairs", TCODColor::darkSepia);
+      actor->portal = portal;
+      actor->fovOnly = false;
+      actor->blocks = false;
+      floor->map->addPortal(actor);
     }
     floorIndex ++;
   }
