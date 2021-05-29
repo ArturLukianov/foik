@@ -11,5 +11,6 @@ int main() {
     //    usleep(100000);
   }
   engine.save();
+  TCODConsole::setFullscreen(false);
   return 0;
 }

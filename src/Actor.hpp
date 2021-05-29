@@ -1,5 +1,6 @@
 class Actor : public Persistent {
 public:
+  //  Floor *currentFloor;
   int x, y;
   int ch;
   TCODColor col;

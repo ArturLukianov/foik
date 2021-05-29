@@ -3,7 +3,7 @@
 
 Engine::Engine(int screenWidth, int screenHeight) : gameStatus(STARTUP), fovRadius(10),
 						    screenWidth(screenWidth), screenHeight(screenHeight) {
-  TCODConsole::initRoot(screenWidth, screenHeight, "foik", false);
+  TCODConsole::initRoot(screenWidth, screenHeight, "foik", true);
   gui = new Gui();
 }
 
@@ -44,7 +44,7 @@ void Engine::init() {
   player->ai = new PlayerAi();
   player->container = new Container(26);
 
-  int nbFloors = TCODRandom::getInstance()->getInt(5, 100);
+  int nbFloors = TCODRandom::getInstance()->getInt(4,8);
 
   while(nbFloors > 0) {
     Floor *floor = new Floor();
@@ -113,8 +113,10 @@ void Engine::update() {
 
 
   if(gameStatus == NEW_TURN) {
-    for(auto actor: currentFloor->actors)
-      actor->update();
+    //    for(auto floor: floors) {
+      for(auto actor:currentFloor->actors)
+	actor->update();
+      //}
   }
 }
 
@@ -123,11 +125,11 @@ void Engine::render() {
   currentFloor->map->render();
   
   for (auto actor: currentFloor->actors) {
-    if(currentFloor->map->isInFov(actor->x, actor->y) ||
-       (currentFloor->map->isExplored(actor->x, actor->y) && !actor->fovOnly)) {
+    //    if(currentFloor->map->isInFov(actor->x, actor->y) ||
+    //   (currentFloor->map->isExplored(actor->x, actor->y) && !actor->fovOnly)) {
 
       actor->render();
-    }
+      //}
   }
 
 
@@ -236,6 +238,7 @@ void Engine::load(bool pause) {
   Menu::MenuItemCode menuItem=engine.gui->menu.pick(pause ? Menu::PAUSE : Menu::MAIN);
 
   if(menuItem == Menu::EXIT || menuItem == Menu::NONE) {
+    TCODConsole::setFullscreen(false);
     exit(0);
   } else if(menuItem == Menu::CONTINUE) {
     term();

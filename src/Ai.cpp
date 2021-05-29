@@ -58,6 +58,12 @@ void PlayerAi::update(Actor *owner) {
   
   if(owner->destructible && owner->destructible->isDead()) return;
 
+  for (int x = 0; x < engine.currentFloor->map->width; x++) {
+    for (int y = 0; y < engine.currentFloor->map->height; y++) {
+      engine.currentFloor->map->isInFov(x, y);
+    }
+  }
+
   int dx = 0, dy = 0;
 
   if(owner->destructible && owner->destructible->hp <= owner->destructible->maxHp - 4) {
