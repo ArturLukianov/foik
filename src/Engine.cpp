@@ -58,33 +58,34 @@ void Engine::init() {
   int floorIndex = 0;
   for(auto floor:floors) {
     Floor *nextFloor;
-    if(floorIndex != floors.size() - 1) {
-      nextFloor = floors.get(floorIndex + 1);
+    if(floorIndex == floors.size() - 1) break;
 
-      Portal *portal = new Portal(floorIndex + 1,
-				  nextFloor->map->entryx,
-				  nextFloor->map->entryy);
-      Actor *actor = new Actor(0, 0, '>', "downstairs", TCODColor::darkSepia);
-      actor->portal = portal;
-      actor->fovOnly = false;
-      actor->blocks = false;
-      floor->map->addPortal(actor);
+    if(floorIndex == 0) {
+      Actor *actor = new Actor(0, 0, 'E', "entrance", TCODColor::lightHan);
+      floor->map->addUpStairs(actor);
     }
+    
+    nextFloor = floors.get(floorIndex + 1);
 
-    if(floorIndex != 0) {
-      nextFloor = floors.get(floorIndex - 1);
-
-
-      Portal *portal = new Portal(floorIndex - 1,
-				  nextFloor->map->entryx,
-				  nextFloor->map->entryy);
-      Actor *actor = new Actor(0, 0, '<', "upstairs", TCODColor::darkSepia);
-      actor->portal = portal;
-      actor->fovOnly = false;
-      actor->blocks = false;
-      floor->map->addPortal(actor);
-    }
-    floorIndex ++;
+    Portal *portal = new Portal(floorIndex + 1,
+				nextFloor->map->entryx,
+				nextFloor->map->entryy);
+    Actor *actor = new Actor(0, 0, '>', "downstairs", TCODColor::darkSepia);
+    actor->portal = portal;
+    actor->fovOnly = false;
+    actor->blocks = false;
+      
+    std::pair<int, int> downStairsPos = floor->map->addDownStairs(actor);
+      
+    portal = new Portal(floorIndex,
+			downStairsPos.first,
+			downStairsPos.second);
+    actor = new Actor(0, 0, '<', "upstairs", TCODColor::darkSepia);
+    actor->portal = portal;
+    actor->fovOnly = false;
+    actor->blocks = false;
+    nextFloor->map->addUpStairs(actor);
+    floorIndex++;
   }
 
   player->x = currentFloor->map->entryx;

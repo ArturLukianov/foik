@@ -23,7 +23,8 @@ public:
   void load(Saver &saver);
   void save(Saver &saver);
 
-  void addPortal(Actor *portal);
+  std::pair<int, int> addUpStairs(Actor *actor);
+  std::pair<int, int> addDownStairs(Actor *actor);
 protected:
   long seed;
   TCODRandom *rng;

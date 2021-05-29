@@ -83,16 +83,9 @@ void PlayerAi::update(Actor *owner) {
     if(!getAttackMove(owner, &dx, &dy)) {
       state = EXPLORE;
     }
-  }
-
-  if(state == EXPLORE) {
+  } else {
     if(owner->container && owner->container->inventory.size() < owner->container->size && isItemInFov(owner))
       state = PICK_ITEM;
-    else {
-      if(!getExploreMove(owner, &dx, &dy)) {
-	state = NEXT_FLOOR;
-      }
-    }
   }
 
   if (state == PICK_ITEM) {
@@ -103,6 +96,12 @@ void PlayerAi::update(Actor *owner) {
 	pickItemFromTile(owner);
 	state = EXPLORE;
       }
+    }
+  }
+  
+  if(state == EXPLORE) {
+    if(!getExploreMove(owner, &dx, &dy)) {
+      state = NEXT_FLOOR;
     }
   }
 

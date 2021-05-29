@@ -222,11 +222,30 @@ void Map::load(Saver &saver) {
   }
 }
 
-void Map::addPortal(Actor *actor) {
-  int x = entryx + TCODRandom::getInstance()->getInt(-2, 2);
-  int y = entryy + TCODRandom::getInstance()->getInt(-2, 2);
-  actor->x = x;
-  actor->y = y;
+std::pair<int, int> Map::addDownStairs(Actor *actor) {
+  std::vector<std::pair<int, int>> freeTiles;
+
+  for(int x = 0; x < width; x++) {
+    for(int y = 0; y < height; y++) {
+      if(canWalk(x, y))
+	freeTiles.push_back({x, y});
+    }
+  }
+  
+  std::pair<int, int> downStairsTile = freeTiles[rand() % freeTiles.size()];
+  
+  actor->x = downStairsTile.first;
+  actor->y = downStairsTile.second;
+
+  floor->actors.push(actor);
+  return {actor->x, actor->y};
+}
+
+std::pair<int, int> Map::addUpStairs(Actor *actor) {
+  actor->x = entryx;
+  actor->y = entryy;
   
   floor->actors.push(actor);
+  return {actor->y, actor->x};
 }
+
