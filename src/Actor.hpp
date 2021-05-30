@@ -1,6 +1,6 @@
 class Actor : public Persistent {
 public:
-  //  Floor *currentFloor;
+  Floor *currentFloor;
   int x, y;
   int ch;
   TCODColor col;
@@ -14,7 +14,7 @@ public:
   Container *container;
   Portal *portal;
 
-  Actor(int x, int y, int ch, const char * name, const TCODColor &col);
+  Actor(Floor *currentFloor, int x, int y, int ch, const char * name, const TCODColor &col);
   ~Actor();
   void render() const;
   void update();

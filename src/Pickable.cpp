@@ -3,7 +3,7 @@
 
 bool Pickable::pick(Actor *owner, Actor *wearer) {
   if(wearer->container && wearer->container->add(owner)) {
-    engine.currentFloor->actors.remove(owner);
+    owner->currentFloor->actors.remove(owner);
     return true;
   }
   return false;
@@ -12,7 +12,7 @@ bool Pickable::pick(Actor *owner, Actor *wearer) {
 void Pickable::drop(Actor *owner, Actor *wearer) {
   if(wearer->container) {
     wearer->container->remove(owner);
-    engine.currentFloor->actors.push(owner);
+    owner->currentFloor->actors.push(owner);
     owner->x = wearer->x;
     owner->y = wearer->y;
     engine.gui->message(TCODColor::lightGrey, "%s drops %s", wearer->name, owner->name);

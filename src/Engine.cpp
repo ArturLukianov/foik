@@ -38,30 +38,26 @@ Actor *Engine::getPortal(int x, int y) const {
 }
 
 void Engine::init() {
-  player = new Actor(40, 25, '@', "player", TCODColor::white);
-  player->destructible = new PlayerDestructible(30, 2, "your corpse");
-  player->attacker = new Attacker(5);
-  player->ai = new PlayerAi();
-  player->container = new Container(26);
-
   int nbFloors = TCODRandom::getInstance()->getInt(4,8);
 
   while(nbFloors > 0) {
     Floor *floor = new Floor();
-    floor->map = new Map(screenWidth, screenHeight - 7, floor);
+    floor->map = new Map(screenWidth - 20, screenHeight - 7, floor);
     floor->map->init(true);
     floors.push(floor);
     nbFloors --;
   }
 
   currentFloor = floors.get(0);
+  currentFloorIndex = 0;
+  
   int floorIndex = 0;
   for(auto floor:floors) {
     Floor *nextFloor;
     if(floorIndex == floors.size() - 1) break;
 
     if(floorIndex == 0) {
-      Actor *actor = new Actor(0, 0, 'E', "entrance", TCODColor::lightHan);
+      Actor *actor = new Actor(floor, 0, 0, 'E', "entrance", TCODColor::lightHan);
       floor->map->addUpStairs(actor);
     }
     
@@ -70,7 +66,7 @@ void Engine::init() {
     Portal *portal = new Portal(floorIndex + 1,
 				nextFloor->map->entryx,
 				nextFloor->map->entryy);
-    Actor *actor = new Actor(0, 0, '>', "downstairs", TCODColor::darkSepia);
+    Actor *actor = new Actor(floor,0, 0, '>', "downstairs", TCODColor::darkSepia);
     actor->portal = portal;
     actor->fovOnly = false;
     actor->blocks = false;
@@ -80,7 +76,7 @@ void Engine::init() {
     portal = new Portal(floorIndex,
 			downStairsPos.first,
 			downStairsPos.second);
-    actor = new Actor(0, 0, '<', "upstairs", TCODColor::darkSepia);
+    actor = new Actor(nextFloor, 0, 0, '<', "upstairs", TCODColor::darkSepia);
     actor->portal = portal;
     actor->fovOnly = false;
     actor->blocks = false;
@@ -88,9 +84,17 @@ void Engine::init() {
     floorIndex++;
   }
 
+  
+  player = new Actor(currentFloor, 40, 25, '@', "player", TCODColor::white);
+  player->destructible = new PlayerDestructible(30, 2, "your corpse");
+  player->attacker = new Attacker(5);
+  player->ai = new PlayerAi();
+  player->container = new Container(26);
+
   player->x = currentFloor->map->entryx;
   player->y = currentFloor->map->entryy;
-  
+
+  currentFloor->actors.push(player);
 
   gui->message(TCODColor::green, "Welcome to dungeon, master!");
   gameStatus = STARTUP;
@@ -100,7 +104,7 @@ void Engine::update() {
   if(gameStatus == STARTUP)
     currentFloor->map->computeFov();
 
-  gameStatus = IDLE;
+  gameStatus = NEW_TURN;
   
   TCODSystem::checkForEvent(TCOD_EVENT_KEY_PRESS|TCOD_EVENT_MOUSE,&lastKey,&mouse);
   if(lastKey.vk == TCODK_ESCAPE) {
@@ -108,15 +112,22 @@ void Engine::update() {
     load(true);
     currentFloor->map->computeFov();
   }
-  
-  player->update();
 
+  if(lastKey.c == '[') {
+    currentFloorIndex = std::max(currentFloorIndex - 1, 0);
+    currentFloor = floors.get(currentFloorIndex);
+  }
+  
+  if(lastKey.c == ']') {
+    currentFloorIndex = std::min(currentFloorIndex + 1, floors.size() - 1);
+    currentFloor = floors.get(currentFloorIndex);
+  }
 
   if(gameStatus == NEW_TURN) {
-    //    for(auto floor: floors) {
-      for(auto actor:currentFloor->actors)
+    for(auto floor: floors) {
+      for(auto actor: floor->actors)
 	actor->update();
-      //}
+    }
   }
 }
 
@@ -125,22 +136,10 @@ void Engine::render() {
   currentFloor->map->render();
   
   for (auto actor: currentFloor->actors) {
-    //    if(currentFloor->map->isInFov(actor->x, actor->y) ||
-    //   (currentFloor->map->isExplored(actor->x, actor->y) && !actor->fovOnly)) {
-
       actor->render();
-      //}
   }
 
-
-  player->render();
-
   gui->render();
-}
-
-void Engine::sendToBack(Actor *actor) {
-  currentFloor->actors.remove(actor);
-  currentFloor->actors.insertBefore(actor, 0);
 }
 
 Actor * Engine::getClosestMonster(int x, int y, float range) const {
@@ -256,7 +255,7 @@ void Engine::load(bool pause) {
     int currentFloorIndex = saver.getInt();
     currentFloor = floors.get(currentFloorIndex);
     
-    player = new Actor(0,0,0,NULL,TCODColor::white);
+    player = new Actor(NULL, 0,0,0,NULL,TCODColor::white);
     player->load(saver);
 
     gui->load(saver);

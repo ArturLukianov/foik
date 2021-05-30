@@ -58,14 +58,15 @@ void PlayerAi::update(Actor *owner) {
   
   if(owner->destructible && owner->destructible->isDead()) return;
 
-  for (int x = 0; x < engine.currentFloor->map->width; x++) {
-    for (int y = 0; y < engine.currentFloor->map->height; y++) {
-      engine.currentFloor->map->isInFov(x, y);
+
+  for (int x = 0; x < owner->currentFloor->map->width; x++) {
+    for (int y = 0; y < owner->currentFloor->map->height; y++) {
+      owner->currentFloor->map->isInFov(x, y);
     }
   }
 
   int dx = 0, dy = 0;
-
+  
   if(owner->destructible && owner->destructible->hp <= owner->destructible->maxHp - 4) {
     for(auto item: owner->container->inventory) {
       if(!strcmp(item->name, "health potion")) {
@@ -74,7 +75,7 @@ void PlayerAi::update(Actor *owner) {
       }
     }
   }
-  
+
   if(isMonsterInFov(owner)) {
     state = ATTACK_MONSTER;
   }
@@ -117,7 +118,7 @@ void PlayerAi::update(Actor *owner) {
       Actor *actor = engine.getPortal(owner->x, owner->y);
       if(actor) {
 	actor->portal->warp(actor, owner);
-	engine.currentFloor->map->computeFov();
+	owner->currentFloor->map->computeFov();
       }
       state = EXPLORE;
     }
@@ -132,18 +133,17 @@ void PlayerAi::update(Actor *owner) {
   default:
     break;
   }
-
+     
   if(dx != 0 || dy != 0) {
-    engine.gameStatus = Engine::NEW_TURN;
     if(moveOrAttack(owner, owner->x+dx, owner->y+dy))
-      engine.currentFloor->map->computeFov();
+      owner->currentFloor->map->computeFov();
   }
 }
 
 bool PlayerAi::isItemInFov(Actor *owner) {
   bool found=false;
-  for(auto actor : engine.currentFloor->actors) {
-    if(actor->pickable && engine.currentFloor->map->isInFov(actor->x, actor->y)) {
+  for(auto actor : owner->currentFloor->actors) {
+    if(actor->pickable && owner->currentFloor->map->isInFov(actor->x, actor->y)) {
       found = true;
       break;
     }
@@ -152,8 +152,8 @@ bool PlayerAi::isItemInFov(Actor *owner) {
 }
 
 bool PlayerAi::isMonsterInFov(Actor *owner) {
-  for(auto actor : engine.currentFloor->actors) {
-    if(actor->destructible && !actor->destructible->isDead() && engine.currentFloor->map->isInFov(actor->x, actor->y)) {
+  for(auto actor : owner->currentFloor->actors) {
+    if(actor->destructible && !actor->destructible->isDead() && owner->currentFloor->map->isInFov(actor->x, actor->y) && actor != owner) {
       return true;
     }
   }
@@ -161,8 +161,8 @@ bool PlayerAi::isMonsterInFov(Actor *owner) {
 }
 
 bool PlayerAi::isMonsterOnTile(Actor *owner, int x, int y) {
-  for(auto actor : engine.currentFloor->actors) {
-    if(actor->destructible && !actor->destructible->isDead() && actor->x == x && actor->y == y) {
+  for(auto actor : owner->currentFloor->actors) {
+    if(actor->destructible && !actor->destructible->isDead() && actor->x == x && actor->y == y && actor != owner) {
       return true;
       break;
     }
@@ -178,8 +178,8 @@ bool PlayerAi::getExploreMove(Actor *owner, int *dx, int *dy) {
     {-1, 0}
   };
   std::queue<std::pair<int, int>> q;
-  int width = engine.currentFloor->map->width;
-  int height = engine.currentFloor->map->height;
+  int width = owner->currentFloor->map->width;
+  int height = owner->currentFloor->map->height;
   
   std::pair<int, int> path[width][height];
   bool used[width][height];
@@ -201,7 +201,7 @@ bool PlayerAi::getExploreMove(Actor *owner, int *dx, int *dy) {
     int nodex = node.first;
     int nodey = node.second;
 
-    if(!engine.currentFloor->map->isExplored(nodex, nodey)) {
+    if(!owner->currentFloor->map->isExplored(nodex, nodey)) {
       targetx = nodex;
       targety = nodey;
       found = true;
@@ -211,7 +211,7 @@ bool PlayerAi::getExploreMove(Actor *owner, int *dx, int *dy) {
     for(int i = 0; i < 4; i++) {
       int nextx = nodex + moveMask[i][0];
       int nexty = nodey + moveMask[i][1];
-      if(!used[nextx][nexty] && engine.currentFloor->map->canWalk(nextx, nexty)) {
+      if(!used[nextx][nexty] && owner->currentFloor->map->canWalk(nextx, nexty)) {
 	used[nextx][nexty] = true;
 	path[nextx][nexty] = {nodex, nodey};
 	q.push({nextx, nexty});
@@ -231,8 +231,8 @@ bool PlayerAi::getExploreMove(Actor *owner, int *dx, int *dy) {
 }
 
 void PlayerAi::getItemInFovPos(Actor *owner, int *x, int *y) {
-  for(auto actor : engine.currentFloor->actors) {
-    if(actor->pickable && engine.currentFloor->map->isInFov(actor->x, actor->y)) {
+  for(auto actor : owner->currentFloor->actors) {
+    if(actor->pickable && owner->currentFloor->map->isInFov(actor->x, actor->y)) {
       (*x) = actor->x;
       (*y) = actor->y;
       break;
@@ -248,8 +248,8 @@ bool PlayerAi::getPickMove(Actor *owner, int *dx, int *dy) {
     {-1, 0}
   };
   std::queue<std::pair<int, int>> q;
-  int width = engine.currentFloor->map->width;
-  int height = engine.currentFloor->map->height;
+  int width = owner->currentFloor->map->width;
+  int height = owner->currentFloor->map->height;
   
   std::pair<int, int> path[width][height];
   bool used[width][height];
@@ -281,7 +281,7 @@ bool PlayerAi::getPickMove(Actor *owner, int *dx, int *dy) {
     for(int i = 0; i < 4; i++) {
       int nextx = nodex + moveMask[i][0];
       int nexty = nodey + moveMask[i][1];
-      if(engine.currentFloor->map->isInFov(nextx, nexty) && !used[nextx][nexty] && engine.currentFloor->map->canWalk(nextx, nexty)) {
+      if(owner->currentFloor->map->isInFov(nextx, nexty) && !used[nextx][nexty] && owner->currentFloor->map->canWalk(nextx, nexty)) {
 	used[nextx][nexty] = true;
 	path[nextx][nexty] = {nodex, nodey};
 	q.push({nextx, nexty});
@@ -302,8 +302,8 @@ bool PlayerAi::getPickMove(Actor *owner, int *dx, int *dy) {
 
 
 void PlayerAi::getMonsterInFovPos(Actor *owner, int *x, int *y) {
-  for(auto actor : engine.currentFloor->actors) {
-    if(actor->destructible && !actor->destructible->isDead() && engine.currentFloor->map->isInFov(actor->x, actor->y)) {
+  for(auto actor : owner->currentFloor->actors) {
+    if(actor->destructible && !actor->destructible->isDead() && owner->currentFloor->map->isInFov(actor->x, actor->y) && actor != owner) {
       (*x) = actor->x;
       (*y) = actor->y;
       break;
@@ -319,8 +319,8 @@ bool PlayerAi::getAttackMove(Actor *owner, int *dx, int *dy) {
     {-1, 0}
   };
   std::queue<std::pair<int, int>> q;
-  int width = engine.currentFloor->map->width;
-  int height = engine.currentFloor->map->height;
+  int width = owner->currentFloor->map->width;
+  int height = owner->currentFloor->map->height;
   
   std::pair<int, int> path[width][height];
   bool used[width][height];
@@ -352,7 +352,7 @@ bool PlayerAi::getAttackMove(Actor *owner, int *dx, int *dy) {
     for(int i = 0; i < 4; i++) {
       int nextx = nodex + moveMask[i][0];
       int nexty = nodey + moveMask[i][1];
-      if(engine.currentFloor->map->isInFov(nextx, nexty) && !used[nextx][nexty] && (engine.currentFloor->map->canWalk(nextx, nexty) || (isMonsterOnTile(owner, nextx, nexty)))) {
+      if(owner->currentFloor->map->isInFov(nextx, nexty) && !used[nextx][nexty] && (owner->currentFloor->map->canWalk(nextx, nexty) || (isMonsterOnTile(owner, nextx, nexty)))) {
 	used[nextx][nexty] = true;
 	path[nextx][nexty] = {nodex, nodey};
 	q.push({nextx, nexty});
@@ -373,17 +373,17 @@ bool PlayerAi::getAttackMove(Actor *owner, int *dx, int *dy) {
 
 
 bool PlayerAi::moveOrAttack(Actor *owner, int targetx, int targety) {
-  if(engine.currentFloor->map->isWall(targetx, targety)) return false;
+  if(owner->currentFloor->map->isWall(targetx, targety)) return false;
 
-  for(auto actor : engine.currentFloor->actors) {
+  for(auto actor : owner->currentFloor->actors) {
     if(actor->destructible && !actor->destructible->isDead() &&
-       actor->x == targetx && actor->y == targety) {
+       actor->x == targetx && actor->y == targety && actor != owner) {
       owner->attacker->attack(owner, actor);
       return false;
     }
   }
 
-  for(auto actor : engine.currentFloor->actors) {
+  for(auto actor : owner->currentFloor->actors) {
     bool corpseOrItem = ((actor->destructible && actor->destructible->isDead()) || (actor->pickable));
     if ( corpseOrItem && actor->x == targetx && actor->y == targety ) {
       engine.gui->message(TCODColor::yellow, "There's a %s here",actor->name);
@@ -396,7 +396,7 @@ bool PlayerAi::moveOrAttack(Actor *owner, int targetx, int targety) {
 
 void PlayerAi::pickItemFromTile(Actor *owner) {
   bool found=false;
-  for(auto actor : engine.currentFloor->actors) {
+  for(auto actor : owner->currentFloor->actors) {
     if(actor->pickable && actor->x == owner->x && actor->y == owner->y) {
       if(actor->pickable->pick(actor, owner)) {
 	found = true;
@@ -415,7 +415,7 @@ void PlayerAi::pickItemFromTile(Actor *owner) {
 }
 
 bool PlayerAi::getNextFloorPortal(Actor *owner, int *x, int *y) {
-  for(auto actor : engine.currentFloor->actors) {
+  for(auto actor : owner->currentFloor->actors) {
     if(actor->portal && actor->ch == '>') {
       (*x) = actor->x;
       (*y) = actor->y;
@@ -433,8 +433,8 @@ bool PlayerAi::getPortalMove(Actor *owner, int *dx, int *dy) {
     {-1, 0}
   };
   std::queue<std::pair<int, int>> q;
-  int width = engine.currentFloor->map->width;
-  int height = engine.currentFloor->map->height;
+  int width = owner->currentFloor->map->width;
+  int height = owner->currentFloor->map->height;
   
   std::pair<int, int> path[width][height];
   bool used[width][height];
@@ -466,7 +466,7 @@ bool PlayerAi::getPortalMove(Actor *owner, int *dx, int *dy) {
     for(int i = 0; i < 4; i++) {
       int nextx = nodex + moveMask[i][0];
       int nexty = nodey + moveMask[i][1];
-      if(!used[nextx][nexty] && engine.currentFloor->map->canWalk(nextx, nexty)) {
+      if(!used[nextx][nexty] && owner->currentFloor->map->canWalk(nextx, nexty)) {
 	used[nextx][nexty] = true;
 	path[nextx][nexty] = {nodex, nodey};
 	q.push({nextx, nexty});
@@ -484,6 +484,7 @@ bool PlayerAi::getPortalMove(Actor *owner, int *dx, int *dy) {
   }
   return found;
 }
+
 
 void PlayerAi::handleActionKey(Actor *owner, int ascii) {
   switch(ascii) {
@@ -515,11 +516,12 @@ void PlayerAi::handleActionKey(Actor *owner, int ascii) {
       Actor *actor = engine.getPortal(owner->x, owner->y);
       if(actor) {
 	actor->portal->warp(actor, owner);
-	engine.currentFloor->map->computeFov();
+	owner->currentFloor->map->computeFov();
       }
     }
   }
 }
+
 
 void PlayerAi::save(Saver &saver) {
   saver.putInt(PLAYER);
@@ -537,13 +539,13 @@ MonsterAi::MonsterAi() : moveCount(0) {}
 void MonsterAi::update(Actor *owner) {
   if(owner->destructible && owner->destructible->isDead()) return;
 
-  if(engine.currentFloor->map->isInFov(owner->x, owner->y)) {
+  if(engine.player->currentFloor == owner->currentFloor && owner->currentFloor->map->isInFov(owner->x, owner->y)) {
     moveCount = TRACKING_TURNS;
   } else {
     moveCount--;
   }
 
-  if(moveCount > 0) {
+  if(moveCount > 0 && !engine.player->destructible->isDead()) {
     moveOrAttack(owner, engine.player->x, engine.player->y);
   }
 }
@@ -561,12 +563,12 @@ bool MonsterAi::moveOrAttack(Actor *owner, int targetx, int targety) {
     dx = (int)(round(dx/distance));
     dy = (int)(round(dy/distance));
 
-    if(engine.currentFloor->map->canWalk(owner->x + dx, owner->y + dy)) {
+    if(owner->currentFloor->map->canWalk(owner->x + dx, owner->y + dy)) {
       owner->x += dx;
       owner->y += dy;
-    } else if(engine.currentFloor->map->canWalk(owner->x + stepdx, owner->y)) {
+    } else if(owner->currentFloor->map->canWalk(owner->x + stepdx, owner->y)) {
       owner->x += stepdx;
-    } else if(engine.currentFloor->map->canWalk(owner->x, owner->y + stepdy)) {
+    } else if(owner->currentFloor->map->canWalk(owner->x, owner->y + stepdy)) {
       owner->y += stepdy;
     }
   } else if (owner->attacker) {
@@ -629,7 +631,7 @@ void ConfusedMonsterAi::update(Actor *owner) {
 
   int destx = owner->x + dx;
   int desty = owner->y + dy;
-  if(engine.currentFloor->map->canWalk(destx, desty)) {
+  if(owner->currentFloor->map->canWalk(destx, desty)) {
     owner->x = destx;
     owner->y = desty;
   } else {

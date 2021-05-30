@@ -19,12 +19,12 @@ public:
 
   TCODList<Floor *> floors;
   Floor *currentFloor;
+  int currentFloorIndex;
 
   Engine(int screenWidth, int screenHeight);
   ~Engine();
   void update();
   void render();
-  void sendToBack(Actor *actor);
   Actor *getClosestMonster(int x, int y, float range) const;
 
   bool pickATile(int *x, int *y, float maxRange = 0.0f);

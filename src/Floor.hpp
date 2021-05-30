@@ -8,4 +8,5 @@ public:
 
   void save(Saver &saver);
   void load(Saver &saver);
+  void sendToBack(Actor *actor);
 };

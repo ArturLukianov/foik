@@ -33,7 +33,7 @@ void Destructible::die(Actor *owner) {
   owner->name = corpseName;
   owner->blocks = false;
 
-  engine.sendToBack(owner);
+  owner->currentFloor->sendToBack(owner);
 }
 
 float Destructible::heal(float amount) {

@@ -8,7 +8,7 @@ int main() {
     engine.update();
     engine.render();
     TCODConsole::flush();
-    //    usleep(100000);
+    usleep(100000);
   }
   engine.save();
   TCODConsole::setFullscreen(false);

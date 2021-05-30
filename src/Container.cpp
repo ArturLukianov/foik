@@ -31,7 +31,7 @@ void Container::load(Saver &saver) {
   int nbActors = saver.getInt();
 
   while(nbActors > 0) {
-    Actor *actor = new Actor(0, 0, 0, NULL, TCODColor::white);
+    Actor *actor = new Actor(NULL, 0, 0, 0, NULL, TCODColor::white);
     actor->load(saver);
     inventory.push(actor);
     nbActors--;

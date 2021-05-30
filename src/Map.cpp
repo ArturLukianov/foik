@@ -167,13 +167,13 @@ bool Map::canWalk(int x, int y) const {
 void Map::addMonster(int x, int y) {
   TCODRandom *rng = TCODRandom::getInstance();
   if(rng->getInt(0, 100) < 80) {
-    Actor *orc = new Actor(x, y, 'o', "orc", TCODColor::desaturatedGreen);
+    Actor *orc = new Actor(floor, x, y, 'o', "orc", TCODColor::desaturatedGreen);
     orc->destructible = new MonsterDestructible(10, 0, "dead orc", 1);
     orc->attacker = new Attacker(3);
     orc->ai = new MonsterAi();
     floor->actors.push(orc);
   } else {
-    Actor *troll = new Actor(x, y, 't', "troll", TCODColor::darkerGreen);
+    Actor *troll = new Actor(floor, x, y, 't', "troll", TCODColor::darkerGreen);
     troll->destructible = new MonsterDestructible(16, 1, "dead troll", 5);
     troll->attacker = new Attacker(4);
     troll->ai = new MonsterAi();
@@ -185,22 +185,22 @@ void Map::addItem(int x, int y) {
   TCODRandom *rng = TCODRandom::getInstance();
   int dice = rng->getInt(0, 100);
   if(dice < 70) {
-    Actor *healthPotion = new Actor(x, y, '!', "health potion", TCODColor::violet);
+    Actor *healthPotion = new Actor(floor, x, y, '!', "health potion", TCODColor::violet);
     healthPotion->blocks = false;
     healthPotion->pickable = new Healer(4);
     floor->actors.push(healthPotion);
   } else if (dice < 70 + 10) {
-    Actor *lightningBolt = new Actor(x, y, '#', "lightning bolt", TCODColor::yellow);
+    Actor *lightningBolt = new Actor(floor, x, y, '#', "lightning bolt", TCODColor::yellow);
     lightningBolt->blocks = false;
     lightningBolt->pickable = new LightningBolt(5, 20);
     floor->actors.push(lightningBolt);
   } else if (dice < 70 + 10 + 10) {
-    Actor *fireball = new Actor(x, y, '#', "fireball", TCODColor::orange);
+    Actor *fireball = new Actor(floor, x, y, '#', "fireball", TCODColor::orange);
     fireball->blocks = false;
     fireball->pickable = new Fireball(5, 20);
     floor->actors.push(fireball);
   } else {
-    Actor *confuser = new Actor(x, y, '#', "confuser", TCODColor::blue);
+    Actor *confuser = new Actor(floor, x, y, '#', "confuser", TCODColor::blue);
     confuser->blocks = false;
     confuser->pickable = new Confuser(10, 8);
     floor->actors.push(confuser);

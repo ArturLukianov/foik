@@ -1,7 +1,7 @@
 #include "main.hpp"
 
-Actor::Actor(int x, int y, int ch, const char *name, const TCODColor &col) :
-  x(x), y(y), ch(ch), name(name), col(col), blocks(true), fovOnly(true), attacker(NULL), destructible(NULL), ai(NULL),
+Actor::Actor(Floor *currentFloor, int x, int y, int ch, const char *name, const TCODColor &col) :
+  currentFloor(currentFloor), x(x), y(y), ch(ch), name(name), col(col), blocks(true), fovOnly(true), attacker(NULL), destructible(NULL), ai(NULL),
   pickable(NULL), container(NULL), portal(NULL) {
 }
 
@@ -23,8 +23,8 @@ void Actor::update() {
 }
 
 bool Actor::moveOrAttack(int x, int y) {
-  if(engine.currentFloor->map->isWall(x, y)) return false;
-  for(auto actor : engine.currentFloor->actors) {
+  if(currentFloor->map->isWall(x, y)) return false;
+  for(auto actor : currentFloor->actors) {
     if(actor->x == x && actor->y == y) {
       return false;
     }

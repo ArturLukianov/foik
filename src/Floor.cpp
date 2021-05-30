@@ -27,9 +27,14 @@ void Floor::load(Saver &saver) {
   int nbActors = saver.getInt();
   actors.clearAndDelete();
   while(nbActors > 0) {
-    Actor *actor = new Actor(0,0,0,NULL,TCODColor::white);
+    Actor *actor = new Actor(this,0,0,0,NULL,TCODColor::white);
     actor->load(saver);
     actors.push(actor);
     nbActors--;
   }
+}
+
+void Floor::sendToBack(Actor *actor) {
+  actors.remove(actor);
+  actors.insertBefore(actor, 0);
 }
