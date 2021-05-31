@@ -29,14 +29,6 @@ int Engine::getFloorIndex(Floor *needle) const {
   return -1;
 }
 
-Actor *Engine::getPortal(int x, int y) const {
-  for (auto actor : engine.currentFloor->actors) {
-    if(actor->portal && actor->x == x && actor->y == y)
-      return actor;
-  }
-  return NULL;
-}
-
 void Engine::init() {
   int nbFloors = TCODRandom::getInstance()->getInt(4,8);
 
@@ -142,20 +134,7 @@ void Engine::render() {
   gui->render();
 }
 
-Actor * Engine::getClosestMonster(int x, int y, float range) const {
-  Actor *closest=NULL;
-  float bestDistance=1E6f;
-  for(auto actor : currentFloor->actors) {
-    if(actor != player && actor->destructible && !actor->destructible->isDead()) {
-      float distance = actor->getDistance(x, y);
-      if(distance < bestDistance && (distance <= range || range == 0.0f)) {
-	bestDistance = distance;
-	closest = actor;
-      }
-    }
-  }
-  return closest;
-}
+
 
 bool Engine::pickATile(int *x, int *y, float maxRange) {
   while(!TCODConsole::isWindowClosed()) {
@@ -193,14 +172,6 @@ bool Engine::pickATile(int *x, int *y, float maxRange) {
 
 }
 
-
-Actor *Engine::getActor(int x, int y) const {
-  for(auto actor: currentFloor->actors) {
-    if(actor->x == x && actor->y == y && actor->destructible && !actor->destructible->isDead())
-      return actor;
-  }
-  return NULL;
-}
 
 void Engine::save() {
   if(player->destructible->isDead()) {
@@ -265,4 +236,15 @@ void Engine::load(bool pause) {
     init();
   }
   
+}
+
+int Engine::countMonsters() const {
+  int nbMonsters = 0;
+  for(auto floor: floors) {
+    for(auto actor: floor->actors) {
+      if(actor != player && actor->destructible && !actor->destructible->isDead())
+	nbMonsters++;
+    }
+  }
+  return nbMonsters;
 }

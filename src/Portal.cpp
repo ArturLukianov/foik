@@ -8,16 +8,14 @@ Portal::Portal(int destinationFloorIndex, int targetx, int targety) :
 }
 
 void Portal::warp(Actor *owner, Actor *warper) {
-  if(warper == engine.player) {
-    Floor *floor = engine.floors.get(destinationFloorIndex);
-    engine.gui->message(TCODColor::orange, "You moved to another location");
-    warper->currentFloor->actors.remove(warper);
-    warper->currentFloor = floor;
-    warper->currentFloor->actors.push(warper);
+  Floor *floor = engine.floors.get(destinationFloorIndex);
+  engine.gui->message(TCODColor::orange, "%s moved to another location", warper->name);
+  warper->currentFloor->actors.remove(warper);
+  warper->currentFloor = floor;
+  warper->currentFloor->actors.push(warper);
     
-    warper->x = targetx;
-    warper->y = targety;
-  }
+  warper->x = targetx;
+  warper->y = targety;
 }
 
 void Portal::save(Saver &saver) {

@@ -115,7 +115,7 @@ void PlayerAi::update(Actor *owner) {
   if(state == NEXT_FLOOR) {
     getPortalMove(owner, &dx, &dy);
     if(dx == 0 && dy == 0) {
-      Actor *actor = engine.getPortal(owner->x, owner->y);
+      Actor *actor = owner->currentFloor->getPortal(owner->x, owner->y);
       if(actor) {
 	actor->portal->warp(actor, owner);
 	owner->currentFloor->map->computeFov();
@@ -513,7 +513,7 @@ void PlayerAi::handleActionKey(Actor *owner, int ascii) {
     break;
   case 'e':
     {
-      Actor *actor = engine.getPortal(owner->x, owner->y);
+      Actor *actor = owner->currentFloor->getPortal(owner->x, owner->y);
       if(actor) {
 	actor->portal->warp(actor, owner);
 	owner->currentFloor->map->computeFov();
@@ -635,7 +635,7 @@ void ConfusedMonsterAi::update(Actor *owner) {
     owner->x = destx;
     owner->y = desty;
   } else {
-    Actor *actor = engine.getActor(destx, desty);
+    Actor *actor = owner->currentFloor->getActor(destx, desty);
     if(actor) {
       owner->attacker->attack(owner, actor);
     }

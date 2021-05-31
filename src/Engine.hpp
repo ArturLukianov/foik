@@ -25,16 +25,16 @@ public:
   ~Engine();
   void update();
   void render();
-  Actor *getClosestMonster(int x, int y, float range) const;
+  //Actor *getClosestMonster(int x, int y, float range) const;
 
   bool pickATile(int *x, int *y, float maxRange = 0.0f);
-  Actor *getActor(int x, int y) const;
   void init();
   void load(bool pause = false);
   void save();
   void term();
   int getFloorIndex(Floor *needle) const;
-  Actor *getPortal(int x, int y) const;
+
+  int countMonsters() const;
 private:
 };
 

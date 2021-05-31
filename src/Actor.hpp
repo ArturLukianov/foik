@@ -14,6 +14,8 @@ public:
   Container *container;
   Portal *portal;
 
+  bool isEnemy;
+
   Actor(Floor *currentFloor, int x, int y, int ch, const char * name, const TCODColor &col);
   ~Actor();
   void render() const;

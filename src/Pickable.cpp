@@ -69,7 +69,7 @@ void Healer::save(Saver &saver) {
 LightningBolt::LightningBolt(float range, float damage) : range(range), damage(damage) {}
 
 bool LightningBolt::use(Actor *owner, Actor *wearer) {
-  Actor *closestMonster = engine.getClosestMonster(wearer->x, wearer->y, range);
+  Actor *closestMonster = wearer->currentFloor->getClosestMonster(wearer->x, wearer->y, range);
   if(!closestMonster) {
     engine.gui->message(TCODColor::lightGrey, "No enenmy is close enough to strike");
     return false;
@@ -131,7 +131,7 @@ bool Confuser::use(Actor *owner, Actor *wearer) {
     return false;
   }
 
-  Actor *actor = engine.getActor(x, y);
+  Actor *actor = wearer->currentFloor->getActor(x, y);
 
   if(!actor) {
     engine.gui->message(TCODColor::lightGrey, "There is nothing to confuse", actor->name);

@@ -21,18 +21,9 @@ void Gui::clear() {
 void Gui::render() {
   con->setDefaultBackground(TCODColor::black);
   con->clear();
-  
-  renderBar(1, 1, BAR_WIDTH, "HP", engine.player->destructible->hp,
-	    engine.player->destructible->maxHp, TCODColor::lightRed,
-	    TCODColor::darkerRed);
 
-  
-  PlayerAi * playerAi = (PlayerAi *)engine.player->ai;
-  char xpTxt[128];
-  sprintf(xpTxt, "XP(%d)", playerAi->xpLevel);
-  renderBar(1, 5, BAR_WIDTH, xpTxt, engine.player->destructible->xp,
-	    playerAi->getNextLevelXp(), TCODColor::lightViolet,
-	    TCODColor::darkerViolet);
+  con->setDefaultForeground(TCODColor::white);
+  con->print(1, 1, "Monsters: %d", engine.countMonsters());
 
   int y=1;
   float colorCoef = 0.4f;

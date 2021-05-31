@@ -2,7 +2,7 @@
 
 Actor::Actor(Floor *currentFloor, int x, int y, int ch, const char *name, const TCODColor &col) :
   currentFloor(currentFloor), x(x), y(y), ch(ch), name(name), col(col), blocks(true), fovOnly(true), attacker(NULL), destructible(NULL), ai(NULL),
-  pickable(NULL), container(NULL), portal(NULL) {
+  pickable(NULL), container(NULL), portal(NULL), isEnemy(false) {
 }
 
 Actor::~Actor() {
