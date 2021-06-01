@@ -7,12 +7,12 @@ Destructible::~Destructible() {
   free((char *)corpseName);
 }
 
-float Destructible::takeDamage(Actor *owner, float damage) {
+float Destructible::takeDamage(Actor *owner, Actor *dealer, float damage) {
   damage -= defense;
   if (damage > 0) {
     hp -= damage;
     if (hp <= 0) {
-      die(owner);
+      die(owner, dealer);
     }
   } else {
     damage = 0;
@@ -27,7 +27,7 @@ float Destructible::countDamage(Actor *owner, float damage) {
   return damage;
 }
 
-void Destructible::die(Actor *owner) {
+void Destructible::die(Actor *owner, Actor *killer) {
   owner->ch = '%';
   owner->col = TCODColor::red;
   owner->name = corpseName;
@@ -75,10 +75,10 @@ Destructible *Destructible::create(Saver &saver) {
 MonsterDestructible::MonsterDestructible(float maxHp, float defense, const char *corpseName, int xp) :
   Destructible(maxHp, defense, corpseName, xp) {}
 
-void MonsterDestructible::die(Actor *owner) {
-  engine.gui->message(TCODColor::red, "%s is dead. You gain %d xp", owner->name, xp);
-  engine.player->destructible->xp += xp;
-  Destructible::die(owner);
+void MonsterDestructible::die(Actor *owner, Actor *killer) {
+  engine.gui->message(TCODColor::red, "%s is dead. %s gain %d xp", owner->name, killer->name, xp);
+  killer->destructible->xp += xp;
+  Destructible::die(owner, killer);
 }
 
 
@@ -91,13 +91,13 @@ void MonsterDestructible::save(Saver &saver) {
 PlayerDestructible::PlayerDestructible(float maxHp, float defense, const char *corpseName) :
   Destructible(maxHp, defense, corpseName, 0) {}
 
-void PlayerDestructible::die(Actor *owner) {
-  engine.gui->message(TCODColor::red, "You died...");
-  Destructible::die(owner);
-  engine.gameStatus = Engine::DEFEAT;
-}
-
 void PlayerDestructible::save(Saver &saver) {
   saver.putInt(PLAYER);
   Destructible::save(saver);
+}
+
+void PlayerDestructible::die(Actor *owner, Actor *killer) { 
+  engine.gui->message(TCODColor::red, "%s is dead. %s gain %d xp", owner->name, killer->name, xp);
+  killer->destructible->xp += xp;
+  Destructible::die(owner, killer);
 }

@@ -52,7 +52,7 @@ Actor * Floor::getClosestMonster(int x, int y, float range) const {
   Actor *closest=NULL;
   float bestDistance=1E6f;
   for(auto actor : actors) {
-    if(actor != engine.player && actor->destructible && !actor->destructible->isDead()) {
+    if(!actor->isEnemy && actor->destructible && !actor->destructible->isDead()) {
       float distance = actor->getDistance(x, y);
       if(distance < bestDistance && (distance <= range || range == 0.0f)) {
 	bestDistance = distance;
@@ -66,6 +66,15 @@ Actor * Floor::getClosestMonster(int x, int y, float range) const {
 Actor *Floor::getPortal(int x, int y) const {
   for (auto actor : actors) {
     if(actor->portal && actor->x == x && actor->y == y)
+      return actor;
+  }
+  return NULL;
+}
+
+Actor *Floor::getEnemyInFov(int x, int y) const {
+  map->computeFov(x, y);
+  for(auto actor: actors) {
+    if(actor->isEnemy && actor->destructible && !actor->destructible->isDead() && map->isInFov(actor->x, actor->y))
       return actor;
   }
   return NULL;

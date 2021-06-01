@@ -17,7 +17,9 @@ public:
 
   bool isInFov(int x, int y) const;
   bool isExplored(int x, int y) const;
-  void computeFov();
+  void explore(int x, int y);
+  void computeFov(Actor *actor);
+  void computeFov(int x, int y);
   bool canWalk(int x, int y) const;
   void init(bool withActors);
   void load(Saver &saver);

@@ -15,7 +15,6 @@ public:
   } gameStatus;
   
   int fovRadius;
-  Actor *player;
 
   TCODList<Floor *> floors;
   Floor *currentFloor;

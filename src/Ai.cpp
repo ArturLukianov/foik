@@ -59,9 +59,10 @@ void PlayerAi::update(Actor *owner) {
   if(owner->destructible && owner->destructible->isDead()) return;
 
 
+  owner->currentFloor->map->computeFov(owner->x, owner->y);
   for (int x = 0; x < owner->currentFloor->map->width; x++) {
     for (int y = 0; y < owner->currentFloor->map->height; y++) {
-      owner->currentFloor->map->isInFov(x, y);
+      owner->currentFloor->map->explore(x, y);
     }
   }
 
@@ -118,13 +119,12 @@ void PlayerAi::update(Actor *owner) {
       Actor *actor = owner->currentFloor->getPortal(owner->x, owner->y);
       if(actor) {
 	actor->portal->warp(actor, owner);
-	owner->currentFloor->map->computeFov();
       }
       state = EXPLORE;
     }
   }
   
-  switch(engine.lastKey.vk) {
+  /*  switch(engine.lastKey.vk) {
   case TCODK_UP : dy = -1; break;
   case TCODK_DOWN : dy = 1; break;
   case TCODK_LEFT : dx = -1; break;
@@ -132,26 +132,26 @@ void PlayerAi::update(Actor *owner) {
   case TCODK_CHAR : handleActionKey(owner, engine.lastKey.c); break;
   default:
     break;
-  }
+    }*/
      
   if(dx != 0 || dy != 0) {
     if(moveOrAttack(owner, owner->x+dx, owner->y+dy))
-      owner->currentFloor->map->computeFov();
+      owner->currentFloor->map->computeFov(owner);
   }
 }
 
 bool PlayerAi::isItemInFov(Actor *owner) {
-  bool found=false;
+  owner->currentFloor->map->computeFov(owner);
   for(auto actor : owner->currentFloor->actors) {
     if(actor->pickable && owner->currentFloor->map->isInFov(actor->x, actor->y)) {
-      found = true;
-      break;
+      return true;
     }
   }
-  return found;
+  return false;
 }
 
 bool PlayerAi::isMonsterInFov(Actor *owner) {
+  owner->currentFloor->map->computeFov(owner);
   for(auto actor : owner->currentFloor->actors) {
     if(actor->destructible && !actor->destructible->isDead() && owner->currentFloor->map->isInFov(actor->x, actor->y) && actor != owner) {
       return true;
@@ -164,7 +164,6 @@ bool PlayerAi::isMonsterOnTile(Actor *owner, int x, int y) {
   for(auto actor : owner->currentFloor->actors) {
     if(actor->destructible && !actor->destructible->isDead() && actor->x == x && actor->y == y && actor != owner) {
       return true;
-      break;
     }
   }
   return false;
@@ -383,12 +382,6 @@ bool PlayerAi::moveOrAttack(Actor *owner, int targetx, int targety) {
     }
   }
 
-  for(auto actor : owner->currentFloor->actors) {
-    bool corpseOrItem = ((actor->destructible && actor->destructible->isDead()) || (actor->pickable));
-    if ( corpseOrItem && actor->x == targetx && actor->y == targety ) {
-      engine.gui->message(TCODColor::yellow, "There's a %s here",actor->name);
-    }
-  }
   owner->x = targetx;
   owner->y = targety;
   return true;
@@ -485,7 +478,7 @@ bool PlayerAi::getPortalMove(Actor *owner, int *dx, int *dy) {
   return found;
 }
 
-
+/*
 void PlayerAi::handleActionKey(Actor *owner, int ascii) {
   switch(ascii) {
   case 'g' :
@@ -520,7 +513,7 @@ void PlayerAi::handleActionKey(Actor *owner, int ascii) {
       }
     }
   }
-}
+}*/
 
 
 void PlayerAi::save(Saver &saver) {
@@ -533,20 +526,28 @@ void PlayerAi::load(Saver &saver) {
 }
 
 
-MonsterAi::MonsterAi() : moveCount(0) {}
+MonsterAi::MonsterAi() : moveCount(0), target(NULL) {}
 
 
 void MonsterAi::update(Actor *owner) {
   if(owner->destructible && owner->destructible->isDead()) return;
 
-  if(engine.player->currentFloor == owner->currentFloor && owner->currentFloor->map->isInFov(owner->x, owner->y)) {
+  if(!target || target->isDead()) {
+    Actor *enemy = owner->currentFloor->getEnemyInFov(owner->x, owner->y);
+    if(enemy)
+      target = new ActorTarget(enemy);
+  }
+
+  if(!target) return;
+  owner->currentFloor->map->computeFov(owner);
+  if(owner->currentFloor->map->isInFov(target->getX(), target->getY())) {
     moveCount = TRACKING_TURNS;
   } else {
     moveCount--;
   }
 
-  if(moveCount > 0 && !engine.player->destructible->isDead()) {
-    moveOrAttack(owner, engine.player->x, engine.player->y);
+  if(moveCount > 0) {
+    moveOrAttack(owner, target->getX(), target->getY());
   }
 }
 
@@ -572,7 +573,9 @@ bool MonsterAi::moveOrAttack(Actor *owner, int targetx, int targety) {
       owner->y += stepdy;
     }
   } else if (owner->attacker) {
-    owner->attacker->attack(owner, engine.player);
+    Actor *enemy = owner->currentFloor->getActor(targetx, targety);
+    if(enemy && enemy->isEnemy)
+      owner->attacker->attack(owner, enemy);
   }
 }
 

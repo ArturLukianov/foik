@@ -80,7 +80,7 @@ bool LightningBolt::use(Actor *owner, Actor *wearer) {
 		      "The damage is %g hit points",
 		      closestMonster->name, closestMonster->destructible->countDamage(closestMonster, damage));
 
-  closestMonster->destructible->takeDamage(closestMonster, damage);
+  closestMonster->destructible->takeDamage(closestMonster, wearer, damage);
   return Pickable::use(owner, wearer);
 }
 
@@ -108,7 +108,7 @@ bool Fireball::use(Actor *owner, Actor *wearer) {
   for(auto actor : engine.currentFloor->actors) {
     if(actor->destructible && !actor->destructible->isDead() && actor->getDistance(x, y) <= range) {
       engine.gui->message(TCODColor::orange, "The %s gets burned for %g hit points", actor->name, actor->destructible->countDamage(actor, damage));
-      actor->destructible->takeDamage(actor, damage);
+      actor->destructible->takeDamage(actor, wearer, damage);
     }
   }
 

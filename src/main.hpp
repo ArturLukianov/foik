@@ -13,6 +13,7 @@ class Actor;
 class Floor;
 
 #include "Persistent.hpp"
+#include "Target.hpp"
 #include "Destructible.hpp"
 #include "Attacker.hpp"
 #include "Ai.hpp"

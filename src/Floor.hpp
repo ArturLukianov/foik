@@ -12,5 +12,6 @@ public:
   Actor* getActor(int x, int y) const;
   Actor* getClosestMonster(int x, int y, float range) const;
   Actor* getPortal(int x, int y) const;
-
+  Actor* getEnemy() const;
+  Actor *getEnemyInFov(int x, int y) const;
 };

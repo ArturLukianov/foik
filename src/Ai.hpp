@@ -24,7 +24,7 @@ public:
   int xpLevel;
   PlayerAi();
   int getNextLevelXp();
-    void handleActionKey(Actor *owner, int ascii);
+  //void handleActionKey(Actor *owner, int ascii);
   Actor *chooseFromInventory(Actor *owner);
   void update(Actor *owner);
   void save(Saver &saver);
@@ -61,6 +61,7 @@ public:
   void save(Saver &saver);
 
 protected:
+  Target *target;
   int moveCount;
   bool moveOrAttack(Actor *owner, int targetx, int targety);
 };

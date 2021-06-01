@@ -9,9 +9,9 @@ public:
   Destructible(float maxHp, float defense, const char *corpseName, int xp);
   virtual ~Destructible();
   inline bool isDead() { return hp <= 0; }
-  float takeDamage(Actor *owner, float damage);
+  float takeDamage(Actor *owner, Actor *dealer, float damage);
   float countDamage(Actor *owner, float damage);
-  virtual void die(Actor *owner);
+  virtual void die(Actor *owner, Actor *killer);
   float heal(float amount);
 
   void load(Saver &saver);
@@ -27,13 +27,13 @@ protected:
 class PlayerDestructible : public Destructible {
 public:
   PlayerDestructible(float maxHp, float defense, const char *corpseName);
-  void die(Actor *owner);
+  void die(Actor *owner, Actor *killer);
   void save(Saver &saver);
 };
 
 class MonsterDestructible : public Destructible {
 public:
   MonsterDestructible(float maxHp, float defense, const char *corpseName, int xp);
-  void die(Actor *owner);
+  void die(Actor *owner, Actor *killer);
   void save(Saver &saver);
 };

@@ -3,7 +3,7 @@
 
 Engine::Engine(int screenWidth, int screenHeight) : gameStatus(STARTUP), fovRadius(10),
 						    screenWidth(screenWidth), screenHeight(screenHeight) {
-  TCODConsole::initRoot(screenWidth, screenHeight, "foik", true);
+  TCODConsole::initRoot(screenWidth, screenHeight, "foik", false);
   gui = new Gui();
 }
 
@@ -77,11 +77,12 @@ void Engine::init() {
   }
 
   
-  player = new Actor(currentFloor, 40, 25, '@', "player", TCODColor::white);
+  Actor *player = new Actor(currentFloor, 40, 25, '@', "player", TCODColor::white);
   player->destructible = new PlayerDestructible(30, 2, "your corpse");
   player->attacker = new Attacker(5);
   player->ai = new PlayerAi();
   player->container = new Container(26);
+  player->isEnemy = true;
 
   player->x = currentFloor->map->entryx;
   player->y = currentFloor->map->entryy;
@@ -93,16 +94,12 @@ void Engine::init() {
 }
 
 void Engine::update() {
-  if(gameStatus == STARTUP)
-    currentFloor->map->computeFov();
-
   gameStatus = NEW_TURN;
   
   TCODSystem::checkForEvent(TCOD_EVENT_KEY_PRESS|TCOD_EVENT_MOUSE,&lastKey,&mouse);
   if(lastKey.vk == TCODK_ESCAPE) {
     save();
     load(true);
-    currentFloor->map->computeFov();
   }
 
   if(lastKey.c == '[') {
@@ -137,7 +134,7 @@ void Engine::render() {
 
 
 bool Engine::pickATile(int *x, int *y, float maxRange) {
-  while(!TCODConsole::isWindowClosed()) {
+  /*  while(!TCODConsole::isWindowClosed()) {
     render();
     for(int cx=0; cx < currentFloor->map->width; cx++) {
       for(int cy=0; cy < currentFloor->map->height; cy++) {
@@ -152,8 +149,7 @@ bool Engine::pickATile(int *x, int *y, float maxRange) {
     
     TCODSystem::checkForEvent(TCOD_EVENT_KEY_PRESS|TCOD_EVENT_MOUSE,&lastKey,&mouse);
 
-    if ( currentFloor->map->isInFov(mouse.cx,mouse.cy)
-	 && ( maxRange == 0 || player->getDistance(mouse.cx,mouse.cy) <= maxRange )) {
+    if ( ) {
       TCODConsole::root->setCharBackground(mouse.cx,mouse.cy,TCODColor::white);
       if ( mouse.lbutton_pressed ) {
 	*x=mouse.cx;
@@ -169,32 +165,28 @@ bool Engine::pickATile(int *x, int *y, float maxRange) {
     TCODConsole::flush();
   }
   return false;
-
+  */
+  printf("pickATile: not implemented\n");
+  return false;
 }
 
 
 void Engine::save() {
-  if(player->destructible->isDead()) {
-    Saver::deleteFile("game.sav");
-  } else {
-    Saver saver;
+  Saver saver;
 
-    saver.putInt(floors.size());
-    for(auto floor : floors)
-      floor->save(saver);
+  saver.putInt(floors.size());
+  for(auto floor : floors)
+    floor->save(saver);
 
-    int currentFloorIndex = 0;
-    for(auto floor : floors) {
-      if(currentFloor == floor) break;
-      currentFloorIndex++;
-    }
-    saver.putInt(currentFloorIndex);
-    
-    player->save(saver);
-
-    gui->save(saver);
-    saver.saveToFile("game.sav");
+  int currentFloorIndex = 0;
+  for(auto floor : floors) {
+    if(currentFloor == floor) break;
+    currentFloorIndex++;
   }
+  saver.putInt(currentFloorIndex);
+  
+  gui->save(saver);
+  saver.saveToFile("game.sav");
 }
 
 void Engine::load(bool pause) {
@@ -225,9 +217,6 @@ void Engine::load(bool pause) {
 
     int currentFloorIndex = saver.getInt();
     currentFloor = floors.get(currentFloorIndex);
-    
-    player = new Actor(NULL, 0,0,0,NULL,TCODColor::white);
-    player->load(saver);
 
     gui->load(saver);
     gameStatus = STARTUP;
@@ -242,7 +231,7 @@ int Engine::countMonsters() const {
   int nbMonsters = 0;
   for(auto floor: floors) {
     for(auto actor: floor->actors) {
-      if(actor != player && actor->destructible && !actor->destructible->isDead())
+      if(!actor->isEnemy && actor->destructible && !actor->destructible->isDead())
 	nbMonsters++;
     }
   }

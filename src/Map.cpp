@@ -73,14 +73,23 @@ bool Map::isExplored(int x, int y) const {
 bool Map::isInFov(int x, int y) const {
   if(x < 0 || y < 0 || x >= width || y >= height) return false;
   if(map->isInFov(x, y)) {
-    tiles[x + y * width].explored = true;
     return true;
   }
   return false;
 }
 
-void Map::computeFov() {
-  map->computeFov(engine.player->x, engine.player->y, engine.fovRadius);
+void Map::explore(int x, int y) {
+  if(isInFov(x, y)) {
+    tiles[x + y * width].explored = true;
+  }
+}
+
+void Map::computeFov(Actor *actor) {
+  map->computeFov(actor->x, actor->y, engine.fovRadius);
+}
+
+void Map::computeFov(int x, int y) {
+  map->computeFov(x, y, engine.fovRadius);
 }
 
 void Map::dig(int x1, int y1, int x2, int y2) {
