@@ -39,7 +39,7 @@ public:
   void clear();
 
 protected:
-  TCODConsole *con;
+  TCODConsole *statsCon;
   struct Message {
     char *text;
     TCODColor col;

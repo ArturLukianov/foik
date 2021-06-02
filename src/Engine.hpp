@@ -8,9 +8,8 @@ public:
   
   enum GameStatus {
     STARTUP,
-    IDLE,
-    NEW_TURN,
-    VICTORY,
+    RUNNING,
+    PAUSED,
     DEFEAT
   } gameStatus;
   

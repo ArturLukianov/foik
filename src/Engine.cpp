@@ -34,7 +34,7 @@ void Engine::init() {
 
   while(nbFloors > 0) {
     Floor *floor = new Floor();
-    floor->map = new Map(screenWidth - 20, screenHeight - 7, floor);
+    floor->map = new Map(screenWidth - 40, screenHeight - 7, floor);
     floor->map->init(true);
     floors.push(floor);
     nbFloors --;
@@ -94,7 +94,8 @@ void Engine::init() {
 }
 
 void Engine::update() {
-  gameStatus = NEW_TURN;
+  if(gameStatus == STARTUP)
+    gameStatus = RUNNING;
   
   TCODSystem::checkForEvent(TCOD_EVENT_KEY_PRESS|TCOD_EVENT_MOUSE,&lastKey,&mouse);
   if(lastKey.vk == TCODK_ESCAPE) {
@@ -112,7 +113,14 @@ void Engine::update() {
     currentFloor = floors.get(currentFloorIndex);
   }
 
-  if(gameStatus == NEW_TURN) {
+  if(lastKey.vk == TCODK_SPACE) {
+    if(gameStatus == RUNNING)
+      gameStatus = PAUSED;
+    else if(gameStatus == PAUSED)
+      gameStatus = RUNNING;
+  }
+
+  if(gameStatus == RUNNING) {
     for(auto floor: floors) {
       for(auto actor: floor->actors)
 	actor->update();

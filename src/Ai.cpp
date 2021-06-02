@@ -16,7 +16,7 @@ Ai * Ai::create(Saver &saver) {
   return ai;
 }
 
-PlayerAi::PlayerAi() : xpLevel(1), state(EXPLORE) {}
+PlayerAi::PlayerAi() : xpLevel(1), state(EXPLORE), target(NULL) {}
 
 const int LEVEL_UP_BASE = 5;
 const int LEVEL_UP_FACTOR = 10;
@@ -77,8 +77,11 @@ void PlayerAi::update(Actor *owner) {
     }
   }
 
-  if(isMonsterInFov(owner)) {
+  if(isMonsterInFov(owner) && !(state == ATTACK_MONSTER && target)) {
     state = ATTACK_MONSTER;
+    Actor *newTargetActor = getMonsterInFov(owner);
+    if(target) delete target;
+    target = new ActorTarget(newTargetActor);
   }
     
   if(state == ATTACK_MONSTER) {
@@ -88,12 +91,17 @@ void PlayerAi::update(Actor *owner) {
 	break;
       }
     }
-    if(!getAttackMove(owner, &dx, &dy)) {
+    if(target->isDead() || !getAttackMove(owner, &dx, &dy)) {
       state = EXPLORE;
+      delete target;
+      target = NULL;
     }
   } else {
-    if(owner->container && owner->container->inventory.size() < owner->container->size && isItemInFov(owner))
+    if(owner->container && owner->container->inventory.size() < owner->container->size && isItemInFov(owner) && !(state == PICK_ITEM && target)) {
       state = PICK_ITEM;
+      if(target) delete target;
+      target = new ActorTarget(getItemInFov(owner));
+    }
   }
 
   if (state == PICK_ITEM) {
@@ -102,6 +110,8 @@ void PlayerAi::update(Actor *owner) {
     } else {
       if(dx == 0 && dy == 0) {
 	pickItemFromTile(owner);
+	delete target;
+	target = NULL;
 	state = EXPLORE;
       }
     }
@@ -123,16 +133,6 @@ void PlayerAi::update(Actor *owner) {
       state = EXPLORE;
     }
   }
-  
-  /*  switch(engine.lastKey.vk) {
-  case TCODK_UP : dy = -1; break;
-  case TCODK_DOWN : dy = 1; break;
-  case TCODK_LEFT : dx = -1; break;
-  case TCODK_RIGHT : dx = 1; break;
-  case TCODK_CHAR : handleActionKey(owner, engine.lastKey.c); break;
-  default:
-    break;
-    }*/
      
   if(dx != 0 || dy != 0) {
     if(moveOrAttack(owner, owner->x+dx, owner->y+dy))
@@ -239,6 +239,14 @@ void PlayerAi::getItemInFovPos(Actor *owner, int *x, int *y) {
   }
 }
 
+Actor * PlayerAi::getItemInFov(Actor *owner) {
+  for(auto actor : owner->currentFloor->actors) {
+    if(actor->pickable && owner->currentFloor->map->isInFov(actor->x, actor->y)) {
+      return actor;
+    }
+  }
+}
+
 bool PlayerAi::getPickMove(Actor *owner, int *dx, int *dy) {
   static const int moveMask[4][2] = {
     {0, 1},
@@ -260,7 +268,8 @@ bool PlayerAi::getPickMove(Actor *owner, int *dx, int *dy) {
 
   int targetx, targety;
 
-  getItemInFovPos(owner, &targetx, &targety);
+  targetx = target->getX();
+  targety = target->getY();
 
   used[owner->x][owner->y] = true;
   path[owner->x][owner->y] = {owner->x, owner->y};
@@ -280,7 +289,7 @@ bool PlayerAi::getPickMove(Actor *owner, int *dx, int *dy) {
     for(int i = 0; i < 4; i++) {
       int nextx = nodex + moveMask[i][0];
       int nexty = nodey + moveMask[i][1];
-      if(owner->currentFloor->map->isInFov(nextx, nexty) && !used[nextx][nexty] && owner->currentFloor->map->canWalk(nextx, nexty)) {
+      if(!used[nextx][nexty] && owner->currentFloor->map->canWalk(nextx, nexty)) {
 	used[nextx][nexty] = true;
 	path[nextx][nexty] = {nodex, nodey};
 	q.push({nextx, nexty});
@@ -310,6 +319,14 @@ void PlayerAi::getMonsterInFovPos(Actor *owner, int *x, int *y) {
   }
 }
 
+Actor * PlayerAi::getMonsterInFov(Actor *owner) {
+  for(auto actor : owner->currentFloor->actors) {
+    if(actor->destructible && !actor->destructible->isDead() && owner->currentFloor->map->isInFov(actor->x, actor->y) && actor != owner) {
+      return actor;
+    }
+  }
+}
+
 bool PlayerAi::getAttackMove(Actor *owner, int *dx, int *dy) {
   static const int moveMask[4][2] = {
     {0, 1},
@@ -331,6 +348,9 @@ bool PlayerAi::getAttackMove(Actor *owner, int *dx, int *dy) {
 
   int targetx, targety;
 
+  targetx = target->getX();
+  targety = target->getY();
+
   used[owner->x][owner->y] = true;
   path[owner->x][owner->y] = {owner->x, owner->y};
   q.push({owner->x, owner->y});
@@ -341,17 +361,15 @@ bool PlayerAi::getAttackMove(Actor *owner, int *dx, int *dy) {
     int nodex = node.first;
     int nodey = node.second;
 
-    if(isMonsterOnTile(owner, nodex, nodey)) {
+    if(nodex == targetx && nodey == targety) {
       found = true;
-      targetx = nodex;
-      targety = nodey;
       break;
     }
     
     for(int i = 0; i < 4; i++) {
       int nextx = nodex + moveMask[i][0];
       int nexty = nodey + moveMask[i][1];
-      if(owner->currentFloor->map->isInFov(nextx, nexty) && !used[nextx][nexty] && (owner->currentFloor->map->canWalk(nextx, nexty) || (isMonsterOnTile(owner, nextx, nexty)))) {
+      if(!used[nextx][nexty] && (owner->currentFloor->map->canWalk(nextx, nexty) || (isMonsterOnTile(owner, nextx, nexty)))) {
 	used[nextx][nexty] = true;
 	path[nextx][nexty] = {nodex, nodey};
 	q.push({nextx, nexty});
@@ -404,7 +422,6 @@ void PlayerAi::pickItemFromTile(Actor *owner) {
   if(!found) {
     engine.gui->message(TCODColor::lightGrey, "There is nothing to pick up");
   }
-  engine.gameStatus = Engine::NEW_TURN;
 }
 
 bool PlayerAi::getNextFloorPortal(Actor *owner, int *x, int *y) {
@@ -478,43 +495,6 @@ bool PlayerAi::getPortalMove(Actor *owner, int *dx, int *dy) {
   return found;
 }
 
-/*
-void PlayerAi::handleActionKey(Actor *owner, int ascii) {
-  switch(ascii) {
-  case 'g' :
-    {
-      pickItemFromTile(owner);
-    }
-    break;
-  case 'i' :
-    {
-      Actor *actor = chooseFromInventory(owner);
-      if(actor) {
-	actor->pickable->use(actor, owner);
-	engine.gameStatus = Engine::NEW_TURN;
-      }
-    }
-    break;
-  case 'd':
-    {
-      Actor *actor = chooseFromInventory(owner);
-      if(actor) {
-	actor->pickable->drop(actor, owner);
-	engine.gameStatus = Engine::NEW_TURN;
-      }
-    }
-    break;
-  case 'e':
-    {
-      Actor *actor = owner->currentFloor->getPortal(owner->x, owner->y);
-      if(actor) {
-	actor->portal->warp(actor, owner);
-	owner->currentFloor->map->computeFov();
-      }
-    }
-  }
-}*/
-
 
 void PlayerAi::save(Saver &saver) {
   saver.putInt(PLAYER);
@@ -534,8 +514,10 @@ void MonsterAi::update(Actor *owner) {
 
   if(!target || target->isDead()) {
     Actor *enemy = owner->currentFloor->getEnemyInFov(owner->x, owner->y);
-    if(enemy)
+    if(enemy) {
+      if(target) delete target;
       target = new ActorTarget(enemy);
+    }
   }
 
   if(!target) return;

@@ -1,6 +1,6 @@
 #include "main.hpp"
 
-Engine engine(80, 60);
+Engine engine(100, 70);
 
 int main() {
   engine.load();
@@ -8,7 +8,6 @@ int main() {
     engine.update();
     engine.render();
     TCODConsole::flush();
-    usleep(100000);
   }
   engine.save();
   TCODConsole::setFullscreen(false);

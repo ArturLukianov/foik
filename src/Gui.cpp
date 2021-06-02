@@ -2,15 +2,19 @@
 
 static const int PANEL_HEIGHT = 7;
 static const int BAR_WIDTH = 20;
-static const int MSG_X = BAR_WIDTH + 2;
-static const int MSG_HEIGHT = PANEL_HEIGHT - 1;
+static int MSG_X;
+static int MSG_HEIGHT;
+static int MSG_WIDTH;
 
 Gui::Gui() {
-  con = new TCODConsole(engine.screenWidth, PANEL_HEIGHT);
+  statsCon = new TCODConsole(engine.screenWidth, PANEL_HEIGHT);
+  MSG_X = engine.screenWidth - 40 + 2;
+  MSG_HEIGHT = engine.screenHeight - 3;
+  MSG_WIDTH = 40 - 4;
 }
 
 Gui::~Gui() {
-  delete con;
+  delete statsCon;
   clear();
 }
 
@@ -19,42 +23,49 @@ void Gui::clear() {
 }
 
 void Gui::render() {
-  con->setDefaultBackground(TCODColor::black);
-  con->clear();
+  statsCon->setDefaultBackground(TCODColor::black);
+  statsCon->clear();
 
-  con->setDefaultForeground(TCODColor::white);
-  con->print(1, 1, "Monsters: %d", engine.countMonsters());
+  statsCon->setDefaultForeground(TCODColor::white);
+  statsCon->print(1, 1, "Monsters: %d", engine.countMonsters());
 
-  int y=1;
-  float colorCoef = 0.4f;
-  for(auto message: log) {
-    con->setDefaultForeground(message->col * colorCoef);
-    con->print(MSG_X, y, message->text);
-    y++;
-    if(colorCoef < 1.0f)
-      colorCoef += 0.3f;
+  if(engine.gameStatus == Engine::PAUSED) {
+    statsCon->setDefaultBackground(TCODColor::darkerYellow);
+    statsCon->rect(51, 1, strlen("=PAUSED="), 1, false, TCOD_BKGND_SET);
+    statsCon->setDefaultForeground(TCODColor::yellow);
+    statsCon->print(51, 1, "=PAUSED=");
   }
 
   renderMouseLook();
 
-  TCODConsole::blit(con, 0, 0, engine.screenWidth, PANEL_HEIGHT,
+  TCODConsole::blit(statsCon, 0, 0, engine.screenWidth, PANEL_HEIGHT,
 		    TCODConsole::root, 0, engine.screenHeight - PANEL_HEIGHT);
+
+  int y=2;
+  float colorCoef = 0.4f;
+  for(auto message: log) {
+    TCODConsole::root->setDefaultForeground(message->col * colorCoef);
+    TCODConsole::root->print(MSG_X, y, message->text);
+    y++;
+    if(colorCoef < 1.0f)
+      colorCoef += 0.3f;
+  }
 
 }
 
 void Gui::renderBar(int x, int y, int width, const char *name,
 		    float value, float maxValue, const TCODColor &barColor,
 		    const TCODColor &backColor) {
-  con->setDefaultBackground(backColor);
-  con->rect(x, y, width, 1, false, TCOD_BKGND_SET);
+  statsCon->setDefaultBackground(backColor);
+  statsCon->rect(x, y, width, 1, false, TCOD_BKGND_SET);
   int barWidth = (int)(value / maxValue * width);
   if(barWidth > 0) {
-    con->setDefaultBackground(barColor);
-    con->rect(x, y, barWidth, 1, false, TCOD_BKGND_SET);
+    statsCon->setDefaultBackground(barColor);
+    statsCon->rect(x, y, barWidth, 1, false, TCOD_BKGND_SET);
   }
 
-  con->setDefaultForeground(TCODColor::white);
-  con->printEx(x+width/2, y, TCOD_BKGND_NONE, TCOD_CENTER, "%s : %g/%g", name, value, maxValue);
+  statsCon->setDefaultForeground(TCODColor::white);
+  statsCon->printEx(x+width/2, y, TCOD_BKGND_NONE, TCOD_CENTER, "%s : %g/%g", name, value, maxValue);
 }
 
 
@@ -77,24 +88,32 @@ void Gui::message(const TCODColor &col, const char *text, ...) {
   char *lineEnd;
 
   do {
-    if(log.size() == MSG_HEIGHT) {
-      Message *toRemove = log.get(0);
-      log.remove(toRemove);
-      delete toRemove;
-    }
     lineEnd = strchr(lineBegin, '\n');
     if(lineEnd) {
       *lineEnd = '\0';
     }
-    Message *msg = new Message(lineBegin, col);
-    log.push(msg);
+    char buf2[128];
+    do {
+      if(log.size() == MSG_HEIGHT) {
+	Message *toRemove = log.get(0);
+	log.remove(toRemove);
+	delete toRemove;
+      }
+      int len = strlen(lineBegin);
+      int copylen = len > MSG_WIDTH ? MSG_WIDTH : len;
+      strncpy(buf2, lineBegin, copylen);
+      buf2[copylen] = '\0';
+      lineBegin += copylen;
+      
+      Message *msg = new Message(buf2, col);
+      log.push(msg);
+    } while (strlen(lineBegin) != 0);
+
     lineBegin = lineEnd + 1;
   } while (lineEnd);
 }
 
 void Gui::renderMouseLook() {
-  if(!engine.currentFloor->map->isInFov(engine.mouse.cx, engine.mouse.cy))
-    return;
   char buf[128]="";
   bool first = true;
   for(auto actor : engine.currentFloor->actors) {
@@ -106,8 +125,8 @@ void Gui::renderMouseLook() {
       strcat(buf, actor->name);
     }
   }
-  con->setDefaultForeground(TCODColor::lightGrey);
-  con->print(1,0,buf);
+  statsCon->setDefaultForeground(TCODColor::lightGrey);
+  statsCon->print(1,0,buf);
 }
 
 

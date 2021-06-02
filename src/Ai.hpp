@@ -20,6 +20,8 @@ public:
   };
 
   PlayerState state;
+
+  Target *target;
   
   int xpLevel;
   PlayerAi();
@@ -46,6 +48,8 @@ public:
   
   void getItemInFovPos(Actor *owner, int *x, int *y);
   void getMonsterInFovPos(Actor *owner, int *x, int *y);
+  Actor *getMonsterInFov(Actor *owner);
+  Actor *getItemInFov(Actor *owner);
  
 
 protected:
