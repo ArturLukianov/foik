@@ -34,6 +34,8 @@ public:
 
   int countMonsters() const;
 
+  void spawnIntruder();
+
   long int lastTurnTime;
 private:
 };

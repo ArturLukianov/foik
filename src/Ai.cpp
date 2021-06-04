@@ -30,27 +30,19 @@ void PlayerAi::update(Actor *owner) {
   if(owner->destructible->xp >= levelUpXp) {
     xpLevel++;
     owner->destructible->xp -= levelUpXp;
-    engine.gui->message(TCODColor::green, "Your battle skills grow stronger! You reached level %d!", xpLevel);
-    /*    engine.gui->menu.clear();
-    
-    engine.gui->menu.addItem(Menu::CONSTITUTION,"Constitution (+20HP)");
-    engine.gui->menu.addItem(Menu::STRENGTH,"Strength (+1 attack)");
-    engine.gui->menu.addItem(Menu::AGILITY,"Agility (+1 defense)");*/
+    engine.gui->message(TCODColor::green, "%s battle skills grow stronger! %s reached level %d!", owner->name, owner->name, xpLevel);
 
-    int choice = TCODRandom::getInstance()->getInt(0, 2); // engine.gui->menu.pick(Menu::PAUSE);
+    int choice = TCODRandom::getInstance()->getInt(0, 2);
     switch(choice) {
     case 0:
       owner->destructible->maxHp += 20;
       owner->destructible->hp += 20;
-      engine.gui->message(TCODColor::green, "You feel yourself tougher", xpLevel);
       break;
     case 1:
       owner->attacker->power += 1;
-      engine.gui->message(TCODColor::green, "You feel yourself stronger", xpLevel);
       break;
     case 2:
       owner->destructible->defense += 1;
-      engine.gui->message(TCODColor::green, "You feel agile", xpLevel);
       break;
     default: break;
     }
@@ -124,13 +116,15 @@ void PlayerAi::update(Actor *owner) {
   }
 
   if(state == NEXT_FLOOR) {
-    getPortalMove(owner, &dx, &dy);
-    if(dx == 0 && dy == 0) {
-      Actor *actor = owner->currentFloor->getPortal(owner->x, owner->y);
-      if(actor) {
-	actor->portal->warp(actor, owner);
+    if(getPortalMove(owner, &dx, &dy)) {
+      if(dx == 0 && dy == 0) {
+	Actor *actor = owner->currentFloor->getPortal(owner->x, owner->y);
+	if(actor) {
+	  printf("Portal found, using it..\n");
+	  actor->portal->warp(actor, owner);
+	}
+	state = EXPLORE;
       }
-      state = EXPLORE;
     }
   }
      
@@ -210,7 +204,7 @@ bool PlayerAi::getExploreMove(Actor *owner, int *dx, int *dy) {
     for(int i = 0; i < 4; i++) {
       int nextx = nodex + moveMask[i][0];
       int nexty = nodey + moveMask[i][1];
-      if(!used[nextx][nexty] && owner->currentFloor->map->canWalk(nextx, nexty)) {
+      if(!used[nextx][nexty] && (owner->currentFloor->map->canWalk(nextx, nexty) || isMonsterOnTile(owner, nextx, nexty))) {
 	used[nextx][nexty] = true;
 	path[nextx][nexty] = {nodex, nodey};
 	q.push({nextx, nexty});
@@ -411,16 +405,12 @@ void PlayerAi::pickItemFromTile(Actor *owner) {
     if(actor->pickable && actor->x == owner->x && actor->y == owner->y) {
       if(actor->pickable->pick(actor, owner)) {
 	found = true;
-	engine.gui->message(TCODColor::lightGrey, "You picked up %s", actor->name);
+	engine.gui->message(TCODColor::lightGrey, "%s picked up %s", owner->name, actor->name);
 	break;
       } else if (!found) {
 	found = true;
-	engine.gui->message(TCODColor::red, "Your inventory is full");
       }
     }
-  }
-  if(!found) {
-    engine.gui->message(TCODColor::lightGrey, "There is nothing to pick up");
   }
 }
 
@@ -476,7 +466,7 @@ bool PlayerAi::getPortalMove(Actor *owner, int *dx, int *dy) {
     for(int i = 0; i < 4; i++) {
       int nextx = nodex + moveMask[i][0];
       int nexty = nodey + moveMask[i][1];
-      if(!used[nextx][nexty] && owner->currentFloor->map->canWalk(nextx, nexty)) {
+      if(!used[nextx][nexty] && (owner->currentFloor->map->canWalk(nextx, nexty) || isMonsterOnTile(owner, nextx, nexty))) {
 	used[nextx][nexty] = true;
 	path[nextx][nexty] = {nodex, nodey};
 	q.push({nextx, nexty});

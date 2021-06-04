@@ -3,12 +3,16 @@
 
 static const int turnDelay = 100;
 
+static int intrusionTimer;
+
 
 Engine::Engine(int screenWidth, int screenHeight) : gameStatus(STARTUP), fovRadius(10),
 						    screenWidth(screenWidth), screenHeight(screenHeight) {
-  TCODConsole::initRoot(screenWidth, screenHeight, "foik", false);
+  TCODConsole::initRoot(screenWidth, screenHeight, "foik", true);
+  TCODMouse::showCursor(true);
   gui = new Gui();
   lastTurnTime = 0;
+  intrusionTimer = TCODRandom::getInstance()->getInt(10, 100);
 }
 
 Engine::~Engine() {
@@ -80,19 +84,6 @@ void Engine::init() {
     floorIndex++;
   }
 
-  
-  Actor *player = new Actor(currentFloor, 40, 25, '@', "player", TCODColor::white);
-  player->destructible = new PlayerDestructible(30, 2, "your corpse");
-  player->attacker = new Attacker(5);
-  player->ai = new PlayerAi();
-  player->container = new Container(26);
-  player->isEnemy = true;
-
-  player->x = currentFloor->map->entryx;
-  player->y = currentFloor->map->entryy;
-
-  currentFloor->actors.push(player);
-
   gui->message(TCODColor::green, "Welcome to dungeon, master!");
   gameStatus = STARTUP;
 }
@@ -139,6 +130,12 @@ void Engine::update() {
     long int ms = tp.tv_sec * 1000 + tp.tv_usec / 1000;
     if(ms - lastTurnTime >= turnDelay) {
       lastTurnTime = ms;
+      intrusionTimer--;
+      if(intrusionTimer <= 0) {
+	  intrusionTimer = TCODRandom::getInstance()->getInt(10, 100);
+	  spawnIntruder();
+	  gui->message(TCODColor::darkRed, "Someone intruded your dungeon!");
+      }
       for(auto floor: floors) {
 	for(auto actor: floor->actors)
 	  actor->update();
@@ -250,4 +247,21 @@ int Engine::countMonsters() const {
     }
   }
   return nbMonsters;
+}
+
+void Engine::spawnIntruder() {
+  Actor *player = new Actor(currentFloor, 40, 25, '@', "adventurer", TCODColor::white);
+  player->destructible = new PlayerDestructible(TCODRandom::getInstance()->getInt(5, 10), 2, "human corpse");
+  player->attacker = new Attacker(TCODRandom::getInstance()->getInt(1, 5));
+  player->ai = new PlayerAi();
+  player->container = new Container(26);
+  player->isEnemy = true;
+
+  Floor *firstFloor = floors.get(0);
+  
+  player->x = firstFloor->map->entryx;
+  player->y = firstFloor->map->entryy;
+  player->currentFloor = firstFloor;
+
+  firstFloor->actors.push(player);
 }

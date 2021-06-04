@@ -49,7 +49,7 @@ bool Healer::use(Actor *owner, Actor *wearer) {
   if(wearer->destructible) {
     float amountHealed = wearer->destructible->heal(amount);
     if(amountHealed > 0) {
-      engine.gui->message(TCODColor::lightBlue, "You quaffed %s and healed %g hit points", owner->name, amountHealed);
+      engine.gui->message(TCODColor::lightBlue, "%s quaffed %s and healed %g hit points", wearer->name, owner->name, amountHealed);
       return Pickable::use(owner, wearer);
     }
   }
@@ -71,7 +71,6 @@ LightningBolt::LightningBolt(float range, float damage) : range(range), damage(d
 bool LightningBolt::use(Actor *owner, Actor *wearer) {
   Actor *closestMonster = wearer->currentFloor->getClosestMonster(wearer->x, wearer->y, range);
   if(!closestMonster) {
-    engine.gui->message(TCODColor::lightGrey, "No enenmy is close enough to strike");
     return false;
   }
 
