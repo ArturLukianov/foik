@@ -5,7 +5,7 @@ public:
   static Ai * create(Saver &saver);
 protected:
   enum AiType {
-    PLAYER, MONSTER, CONFUSED_MONSTER
+	       PLAYER, MONSTER, CONFUSED_MONSTER, RANGED_CONSTRUCTION
   };
 };
 
@@ -81,4 +81,22 @@ public:
 protected:
   int nbTurns;
   Ai *oldAi;
+};
+
+
+class RangedConstructionAi : public Ai {
+public:
+  RangedConstructionAi(int maxBolts, int boltRechargeTime, float range);
+  void update(Actor *owner);
+  void load(Saver &saver);
+  void save(Saver &saver);
+
+protected:
+  Target *target;
+  int maxBolts;
+  int bolts;
+  int boltRechargeTime;
+  int rechargeTimer;
+  float range;
+  bool moveOrAttack(Actor *owner, int targetx, int targety);
 };

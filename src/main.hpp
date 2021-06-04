@@ -7,6 +7,7 @@
 #include <fstream>
 #include <queue>
 #include <unistd.h>
+#include <sys/time.h>
 #include "libtcod.hpp"
 
 class Actor;

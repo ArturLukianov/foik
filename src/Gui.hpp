@@ -4,10 +4,7 @@ public:
     NONE,
     NEW_GAME,
     CONTINUE,
-    EXIT,
-    CONSTITUTION,
-    STRENGTH,
-    AGILITY
+    EXIT
   };
 
   enum DisplayMode {
@@ -38,6 +35,18 @@ public:
   void save(Saver &saver);
   void clear();
 
+  enum {
+	LOGS,
+	MENU
+  } guiStatus;
+
+  enum {
+	MAIN,
+	BUILD
+  } sideMenu;
+
+  void handleActionKey(char key);
+
 protected:
   TCODConsole *statsCon;
   struct Message {
@@ -53,7 +62,10 @@ protected:
 		 float value, float maxValue, const TCODColor &barColor,
 		 const TCODColor &backColor);
 
-  void renderMouseLook();
+  void renderMainMenu();
+  void renderBuildMenu();
+  
+  void renderSideLogs();
 };
 
 

@@ -99,7 +99,7 @@ void LightningBolt::load(Saver &saver) {
 Fireball::Fireball(float range, float damage) : LightningBolt(range, damage) {}
 
 bool Fireball::use(Actor *owner, Actor *wearer) {
-  engine.gui->message(TCODColor::cyan, "Left-click a target tile for the fireball,\nor right-click to cancel.");
+  /*  engine.gui->message(TCODColor::cyan, "Left-click a target tile for the fireball,\nor right-click to cancel.");
   int x,y;
   if(!engine.pickATile(&x, &y, range)) {
     return false;
@@ -110,7 +110,7 @@ bool Fireball::use(Actor *owner, Actor *wearer) {
       engine.gui->message(TCODColor::orange, "The %s gets burned for %g hp", actor->name, actor->destructible->countDamage(actor, damage));
       actor->destructible->takeDamage(actor, wearer, damage);
     }
-  }
+    }*/
 
   return Pickable::use(owner, wearer);
 }
@@ -125,7 +125,7 @@ void Fireball::save(Saver &saver) {
 Confuser::Confuser(int nbTurns, float range) : nbTurns(nbTurns), range(range) {}
 
 bool Confuser::use(Actor *owner, Actor *wearer) {
-  engine.gui->message(TCODColor::cyan, "Left-click a target tile for the confuser,\nor right-click to cancel.");
+  /*  engine.gui->message(TCODColor::cyan, "Left-click a target tile for the confuser,\nor right-click to cancel.");
   int x,y;
   if(!engine.pickATile(&x, &y, range)) {
     return false;
@@ -141,7 +141,7 @@ bool Confuser::use(Actor *owner, Actor *wearer) {
   Ai *confusedAi = new ConfusedMonsterAi(nbTurns, actor->ai);
 
   engine.gui->message(TCODColor::orange, "The %s is confused!", actor->name);
-  actor->ai = confusedAi;
+  actor->ai = confusedAi;*/
 
   return Pickable::use(owner, wearer);
 }

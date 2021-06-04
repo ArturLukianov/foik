@@ -9,8 +9,10 @@ static int MSG_WIDTH;
 Gui::Gui() {
   statsCon = new TCODConsole(engine.screenWidth, PANEL_HEIGHT);
   MSG_X = engine.screenWidth - 40 + 2;
-  MSG_HEIGHT = engine.screenHeight - 3;
+  MSG_HEIGHT = engine.screenHeight - 4;
   MSG_WIDTH = 40 - 4;
+  guiStatus = LOGS;
+  sideMenu = MAIN;
 }
 
 Gui::~Gui() {
@@ -36,12 +38,43 @@ void Gui::render() {
     statsCon->print(51, 1, "=PAUSED=");
   }
 
-  renderMouseLook();
-
   TCODConsole::blit(statsCon, 0, 0, engine.screenWidth, PANEL_HEIGHT,
 		    TCODConsole::root, 0, engine.screenHeight - PANEL_HEIGHT);
 
-  int y=2;
+
+  if (guiStatus == LOGS) {
+    TCODConsole::root->setDefaultBackground(TCODColor::darkerGrey);
+    TCODConsole::root->rect(MSG_X + 1, 1, strlen("Logs") + 2, 1, false, TCOD_BKGND_SET);
+    TCODConsole::root->setDefaultForeground(TCODColor::white);
+    TCODConsole::root->print(MSG_X + 2, 1, "Logs");
+    TCODConsole::root->setDefaultBackground(TCODColor::darkestGrey);
+    TCODConsole::root->rect(MSG_X + 2 + 6, 1, strlen("Menu") + 2, 1, false, TCOD_BKGND_SET);
+    TCODConsole::root->setDefaultForeground(TCODColor::darkGrey);
+    TCODConsole::root->print(MSG_X + 2 + 6 + 1, 1, "Menu");
+    TCODConsole::root->setDefaultBackground(TCODColor::black);
+
+    renderSideLogs();
+  } else if (guiStatus == MENU) {
+    TCODConsole::root->setDefaultBackground(TCODColor::darkestGrey);
+    TCODConsole::root->rect(MSG_X + 1, 1, strlen("Logs") + 2, 1, false, TCOD_BKGND_SET);
+    TCODConsole::root->setDefaultForeground(TCODColor::darkGrey);
+    TCODConsole::root->print(MSG_X + 2, 1, "Logs");
+    TCODConsole::root->setDefaultBackground(TCODColor::darkerGrey);
+    TCODConsole::root->rect(MSG_X + 2 + 6, 1, strlen("Menu") + 2, 1, false, TCOD_BKGND_SET);
+    TCODConsole::root->setDefaultForeground(TCODColor::white);
+    TCODConsole::root->print(MSG_X + 2 + 6 + 1, 1, "Menu");
+    TCODConsole::root->setDefaultBackground(TCODColor::black);
+
+    if(sideMenu == MAIN)
+      renderMainMenu();
+    else if(sideMenu == BUILD)
+      renderBuildMenu();
+  }
+
+}
+
+void Gui::renderSideLogs() {
+  int y=3;
   float colorCoef = 0.4f;
   for(auto message: log) {
     TCODConsole::root->setDefaultForeground(message->col * colorCoef);
@@ -50,7 +83,65 @@ void Gui::render() {
     if(colorCoef < 1.0f)
       colorCoef += 0.3f;
   }
+}
 
+void Gui::handleActionKey(char key) {
+  if(sideMenu == MAIN) {
+    switch(key) {
+    case 'b':
+      sideMenu = BUILD;
+      break;
+    }
+  } else if(sideMenu == BUILD) {
+    switch(key) {
+    case 'c':
+      int x, y;
+      if(engine.pickATile(&x, &y)) {
+	Actor *crossbow = new Actor(engine.currentFloor, x, y, '}', "crossbow", TCODColor::violet);
+	crossbow->blocks = false;
+	crossbow->attacker = new Attacker(6);
+	crossbow->destructible = new ConstructionDestructible(2, 0, "broken crossbow");
+	crossbow->ai = new RangedConstructionAi(2, 10, 5.0f);
+	engine.currentFloor->actors.push(crossbow);
+      }
+      break;
+    }
+  }
+}
+
+void Gui::renderMainMenu() {
+  TCODConsole::root->setDefaultForeground(TCODColor::lightGreen);
+  TCODConsole::root->print(MSG_X, 3, "[");
+  TCODConsole::root->print(MSG_X + 2, 3, "]");
+  TCODConsole::root->setDefaultForeground(TCODColor::white);
+  TCODConsole::root->print(MSG_X + 1, 3, "/");
+  TCODConsole::root->print(MSG_X + 4, 3, "- move up/down a floor");
+
+  TCODConsole::root->setDefaultForeground(TCODColor::lightGreen);
+  TCODConsole::root->print(MSG_X, 4, "SPACE");
+  TCODConsole::root->setDefaultForeground(TCODColor::white);
+  TCODConsole::root->print(MSG_X + 6, 4, "- pause/unpause");
+
+  TCODConsole::root->setDefaultForeground(TCODColor::lightGreen);
+  TCODConsole::root->print(MSG_X, 4, "SPACE");
+  TCODConsole::root->setDefaultForeground(TCODColor::white);
+  TCODConsole::root->print(MSG_X + 6, 4, "- pause/unpause");
+    
+  TCODConsole::root->setDefaultForeground(TCODColor::lightGreen);
+  TCODConsole::root->print(MSG_X, 5, "b");
+  TCODConsole::root->setDefaultForeground(TCODColor::white);
+  TCODConsole::root->print(MSG_X + 2, 5, "- build");
+}
+
+void Gui::renderBuildMenu() {
+  TCODConsole::root->setDefaultForeground(TCODColor::lightViolet);
+  TCODConsole::root->print(MSG_X, 3, "Build:");
+
+  
+  TCODConsole::root->setDefaultForeground(TCODColor::lightGreen);
+  TCODConsole::root->print(MSG_X, 5, "c");
+  TCODConsole::root->setDefaultForeground(TCODColor::white);
+  TCODConsole::root->print(MSG_X + 2, 5, "- crossbow");
 }
 
 void Gui::renderBar(int x, int y, int width, const char *name,
@@ -112,23 +203,6 @@ void Gui::message(const TCODColor &col, const char *text, ...) {
     lineBegin = lineEnd + 1;
   } while (lineEnd);
 }
-
-void Gui::renderMouseLook() {
-  char buf[128]="";
-  bool first = true;
-  for(auto actor : engine.currentFloor->actors) {
-    if(actor->x == engine.mouse.cx && actor->y == engine.mouse.cy) {
-      if(!first)
-	strcat(buf, ", ");
-      else
-	first = false;
-      strcat(buf, actor->name);
-    }
-  }
-  statsCon->setDefaultForeground(TCODColor::lightGrey);
-  statsCon->print(1,0,buf);
-}
-
 
 void Gui::save(Saver &saver) {
   saver.putInt(log.size());

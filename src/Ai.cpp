@@ -571,6 +571,70 @@ void MonsterAi::load(Saver &saver) {
 }
 
 
+
+RangedConstructionAi::RangedConstructionAi(int maxBolts, int boltRechargeTime, float range) :
+  maxBolts(maxBolts), bolts(maxBolts), boltRechargeTime(boltRechargeTime),
+  rechargeTimer(boltRechargeTime), range(range), target(NULL) {}
+
+
+void RangedConstructionAi::update(Actor *owner) {
+  if(owner->destructible && owner->destructible->isDead()) return;
+
+  if(bolts < maxBolts) {
+    rechargeTimer ++;
+    if(rechargeTimer <= 0) {
+      rechargeTimer = boltRechargeTime;
+      bolts++;
+    }
+  } else {
+    rechargeTimer = boltRechargeTime;
+  }
+
+  if(!target || target->isDead()) {
+    Actor *enemy = owner->currentFloor->getEnemyInFov(owner->x, owner->y);
+    if(enemy) {
+      if(target) delete target;
+      target = new ActorTarget(enemy);
+    }
+  }
+
+  if(!target) return;
+  owner->currentFloor->map->computeFov(owner);
+
+  moveOrAttack(owner, target->getX(), target->getY());
+}
+
+bool RangedConstructionAi::moveOrAttack(Actor *owner, int targetx, int targety) {
+  int dx = targetx - owner->x;
+  int dy = targety - owner->y;
+
+  float distance = sqrtf(dx*dx+dy*dy);
+
+  if(distance <= range && owner->attacker) {
+    dx = (int)(round(dx/distance));
+    dy = (int)(round(dy/distance));
+
+    Actor *enemy = owner->currentFloor->getActor(targetx, targety);
+    if(enemy && enemy->isEnemy) {
+      if(bolts > 0) {
+	owner->attacker->attack(owner, enemy);
+	bolts--;
+      }
+    }
+  }
+}
+
+void RangedConstructionAi::save(Saver &saver) {
+  saver.putInt(RANGED_CONSTRUCTION);
+  saver.putInt(maxBolts);
+  saver.putInt(bolts);
+}
+
+void RangedConstructionAi::load(Saver &saver) {
+}
+
+
+
 Actor *PlayerAi::chooseFromInventory(Actor *owner) {
   static const int INVENTORY_WIDTH=50;
   static const int INVENTORY_HEIGHT=28;

@@ -1,10 +1,14 @@
 #include "main.hpp"
 
 
+static const int turnDelay = 100;
+
+
 Engine::Engine(int screenWidth, int screenHeight) : gameStatus(STARTUP), fovRadius(10),
 						    screenWidth(screenWidth), screenHeight(screenHeight) {
   TCODConsole::initRoot(screenWidth, screenHeight, "foik", false);
   gui = new Gui();
+  lastTurnTime = 0;
 }
 
 Engine::~Engine() {
@@ -95,7 +99,7 @@ void Engine::init() {
 
 void Engine::update() {
   if(gameStatus == STARTUP)
-    gameStatus = RUNNING;
+    gameStatus = PAUSED;
   
   TCODSystem::checkForEvent(TCOD_EVENT_KEY_PRESS|TCOD_EVENT_MOUSE,&lastKey,&mouse);
   if(lastKey.vk == TCODK_ESCAPE) {
@@ -120,10 +124,25 @@ void Engine::update() {
       gameStatus = RUNNING;
   }
 
+  if(lastKey.vk == TCODK_TAB) {
+    if(gui->guiStatus == Gui::LOGS)
+      gui->guiStatus = Gui::MENU;
+    else if(gui->guiStatus == Gui::MENU)
+      gui->guiStatus = Gui::LOGS;
+  }
+
+  gui->handleActionKey(lastKey.c);
+
   if(gameStatus == RUNNING) {
-    for(auto floor: floors) {
-      for(auto actor: floor->actors)
-	actor->update();
+    struct timeval tp;
+    gettimeofday(&tp, NULL);
+    long int ms = tp.tv_sec * 1000 + tp.tv_usec / 1000;
+    if(ms - lastTurnTime >= turnDelay) {
+      lastTurnTime = ms;
+      for(auto floor: floors) {
+	for(auto actor: floor->actors)
+	  actor->update();
+      }
     }
   }
 }
@@ -141,23 +160,13 @@ void Engine::render() {
 
 
 
-bool Engine::pickATile(int *x, int *y, float maxRange) {
-  /*  while(!TCODConsole::isWindowClosed()) {
+bool Engine::pickATile(int *x, int *y) {
+  while(!TCODConsole::isWindowClosed()) {
     render();
-    for(int cx=0; cx < currentFloor->map->width; cx++) {
-      for(int cy=0; cy < currentFloor->map->height; cy++) {
-	if(currentFloor->map->isInFov(cx, cy) &&
-	   (maxRange == 0 || player->getDistance(cx, cy) <= maxRange) ) {
-	  TCODColor col = TCODConsole::root->getCharBackground(cx,cy);
-	  col = col * 1.2f;
-	  TCODConsole::root->setCharBackground(cx, cy, col);
-	}
-      }
-    }
     
     TCODSystem::checkForEvent(TCOD_EVENT_KEY_PRESS|TCOD_EVENT_MOUSE,&lastKey,&mouse);
 
-    if ( ) {
+    if (currentFloor->map->canWalk(mouse.cx, mouse.cy)) {
       TCODConsole::root->setCharBackground(mouse.cx,mouse.cy,TCODColor::white);
       if ( mouse.lbutton_pressed ) {
 	*x=mouse.cx;
@@ -172,9 +181,6 @@ bool Engine::pickATile(int *x, int *y, float maxRange) {
 
     TCODConsole::flush();
   }
-  return false;
-  */
-  printf("pickATile: not implemented\n");
   return false;
 }
 

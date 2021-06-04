@@ -25,7 +25,7 @@ public:
   void render();
   //Actor *getClosestMonster(int x, int y, float range) const;
 
-  bool pickATile(int *x, int *y, float maxRange = 0.0f);
+  bool pickATile(int *x, int *y);
   void init();
   void load(bool pause = false);
   void save();
@@ -33,6 +33,8 @@ public:
   int getFloorIndex(Floor *needle) const;
 
   int countMonsters() const;
+
+  long int lastTurnTime;
 private:
 };
 

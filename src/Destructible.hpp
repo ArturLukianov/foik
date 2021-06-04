@@ -19,7 +19,7 @@ public:
   static Destructible *create(Saver &saver);
 protected:
   enum DestructibleType {
-    MONSTER, PLAYER
+			 MONSTER, PLAYER, CONSTRUCTION
   };
 };
 
@@ -34,6 +34,13 @@ public:
 class MonsterDestructible : public Destructible {
 public:
   MonsterDestructible(float maxHp, float defense, const char *corpseName, int xp);
+  void die(Actor *owner, Actor *killer);
+  void save(Saver &saver);
+};
+
+class ConstructionDestructible : public Destructible {
+public:
+  ConstructionDestructible(float maxHp, float defense, const char *corpseName);
   void die(Actor *owner, Actor *killer);
   void save(Saver &saver);
 };

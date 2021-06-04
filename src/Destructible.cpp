@@ -88,6 +88,21 @@ void MonsterDestructible::save(Saver &saver) {
 }
 
 
+ConstructionDestructible::ConstructionDestructible(float maxHp, float defense, const char *corpseName) :
+  Destructible(maxHp, defense, corpseName, 0) {}
+
+void ConstructionDestructible::die(Actor *owner, Actor *killer) {
+  engine.gui->message(TCODColor::red, "%s is broken by %s.", owner->name, killer->name);
+  Destructible::die(owner, killer);
+}
+
+
+void ConstructionDestructible::save(Saver &saver) {
+  saver.putInt(CONSTRUCTION);
+  Destructible::save(saver);
+}
+
+
 PlayerDestructible::PlayerDestructible(float maxHp, float defense, const char *corpseName) :
   Destructible(maxHp, defense, corpseName, 0) {}
 
