@@ -5,7 +5,7 @@ public:
   static Ai * create(Saver &saver);
 protected:
   enum AiType {
-	       ADVENTURER, MONSTER, CONFUSED_MONSTER, RANGED_CONSTRUCTION
+	       ADVENTURER, MONSTER, CONFUSED_MONSTER, RANGED_CONSTRUCTION, DUNGEON_CORE, SPIKE_TRAP
   };
 };
 
@@ -99,4 +99,27 @@ protected:
   int rechargeTimer;
   float range;
   bool moveOrAttack(Actor *owner, int targetx, int targety);
+};
+
+class SpikeAi : public Ai {
+public:
+  SpikeAi(int rechargeTime);
+  void update(Actor *owner);
+  void load(Saver &saver);
+  void save(Saver &saver);
+
+protected:
+  Target *target;
+  bool charged;
+  int rechargeTime;
+  int rechargeTimer;
+  bool moveOrAttack(Actor *owner, int targetx, int targety);
+};
+
+class DungeonCoreAi : public Ai {
+public:
+  DungeonCoreAi();
+  void update(Actor *owner);
+  void load(Saver &saver);
+  void save(Saver &saver);
 };

@@ -8,9 +8,9 @@ static int intrusionTimer;
 
 Engine::Engine(int screenWidth, int screenHeight) : gameStatus(STARTUP), fovRadius(10),
 						    screenWidth(screenWidth), screenHeight(screenHeight),
-						    dp(100), lastTurnTime(0)
+						    lastTurnTime(0)
 {
-  TCODConsole::initRoot(screenWidth, screenHeight, "foik", false);
+  TCODConsole::initRoot(screenWidth, screenHeight, "foik", true);
   TCODMouse::showCursor(true);
   gui = new Gui();
   intrusionTimer = TCODRandom::getInstance()->getInt(10, 100);
@@ -39,6 +39,7 @@ int Engine::getFloorIndex(Floor *needle) const {
 }
 
 void Engine::init() {
+  dp = 100;
   int nbFloors = TCODRandom::getInstance()->getInt(2,4);
 
   while(nbFloors > 0) {
@@ -69,7 +70,6 @@ void Engine::init() {
 				nextFloor->map->entryy);
     Actor *actor = new Actor(floor,0, 0, '>', "downstairs", TCODColor::darkSepia);
     actor->portal = portal;
-    actor->fovOnly = false;
     actor->blocks = false;
       
     std::pair<int, int> downStairsPos = floor->map->addDownStairs(actor);
@@ -79,11 +79,18 @@ void Engine::init() {
 			downStairsPos.second);
     actor = new Actor(nextFloor, 0, 0, '<', "upstairs", TCODColor::darkSepia);
     actor->portal = portal;
-    actor->fovOnly = false;
     actor->blocks = false;
     nextFloor->map->addUpStairs(actor);
     floorIndex++;
   }
+
+  Actor *dungeonCore = new Actor(floors.get(floors.size() - 1), 0, 0, '0', "dungeon core", TCODColor::fuchsia);
+
+  dungeonCore->destructible = new DungeonCoreDestructible(20, 1, "broken dungeon core");
+  dungeonCore->blocks = false;
+  dungeonCore->ai = new DungeonCoreAi();
+
+  floors.get(floors.size() - 1)->addCore(dungeonCore);
 
   gui->message(TCODColor::green, "Welcome to dungeon, master!");
   gameStatus = STARTUP;
@@ -92,6 +99,15 @@ void Engine::init() {
 void Engine::update() {
   if(gameStatus == STARTUP)
     gameStatus = PAUSED;
+  
+  if(gameStatus == DEFEAT) {
+      engine.gui->menu.clear();
+      engine.gui->menu.addItem(Menu::NEW_GAME,"New game");
+      if(Saver::fileExists("game.sav")) {
+	engine.gui->menu.addItem(Menu::CONTINUE,"Continue");
+      }
+      engine.gui->menu.addItem(Menu::EXIT,"Exit");
+  }
   
   TCODSystem::checkForEvent(TCOD_EVENT_KEY_PRESS|TCOD_EVENT_MOUSE,&lastKey,&mouse);
   if(lastKey.vk == TCODK_ESCAPE) {
@@ -203,6 +219,9 @@ void Engine::save() {
 
 void Engine::load(bool pause) {
   engine.gui->menu.clear();
+  if(!pause) {
+    engine.gui->menu.setText("Welcome to the FOIK, master!");
+  }
   engine.gui->menu.addItem(Menu::NEW_GAME,"New game");
   if(Saver::fileExists("game.sav")) {
     engine.gui->menu.addItem(Menu::CONTINUE,"Continue");
@@ -252,7 +271,7 @@ int Engine::countMonsters() const {
 
 void Engine::spawnIntruder() {
   Actor *adventurer = new Actor(currentFloor, 40, 25, '@', "adventurer", TCODColor::white);
-  adventurer->destructible = new AdventurerDestructible(TCODRandom::getInstance()->getInt(5, 10), 2, "human corpse");
+  adventurer->destructible = new AdventurerDestructible(TCODRandom::getInstance()->getInt(5, 10), TCODRandom::getInstance()->getInt(0, 3), "human corpse");
   adventurer->attacker = new Attacker(TCODRandom::getInstance()->getInt(1, 5));
   adventurer->ai = new AdventurerAi();
   adventurer->container = new Container(26);

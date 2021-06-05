@@ -6,7 +6,6 @@ public:
   TCODColor col;
   const char * name;
   bool blocks;
-  bool fovOnly;
   Attacker *attacker;
   Destructible *destructible;
   Ai *ai;

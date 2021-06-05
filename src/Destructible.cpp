@@ -111,7 +111,7 @@ void ConstructionDestructible::save(Saver &saver) {
 
 
 AdventurerDestructible::AdventurerDestructible(float maxHp, float defense, const char *corpseName) :
-  Destructible(maxHp, defense, corpseName, 0) {}
+  Destructible(maxHp, defense, corpseName, 1) {}
 
 void AdventurerDestructible::save(Saver &saver) {
   saver.putInt(ADVENTURER);
@@ -121,5 +121,37 @@ void AdventurerDestructible::save(Saver &saver) {
 void AdventurerDestructible::die(Actor *owner, Actor *killer) { 
   engine.gui->message(TCODColor::red, "%s is dead. %s gain %d xp", owner->name, killer->name, xp);
   killer->destructible->xp += xp;
+  engine.gui->message(TCODColor::red, "%d DP earned from kill", (xp + 1) / 2);
+  engine.dp += (xp + 1) / 2;
   Destructible::die(owner, killer);
 }
+
+DungeonCoreDestructible::DungeonCoreDestructible(float maxHp, float defense, const char *corpseName) : Destructible(maxHp, defense, corpseName, 100) {}
+
+void DungeonCoreDestructible::save(Saver &saver) {
+  saver.putInt(DUNGEON_CORE);
+  Destructible::save(saver);
+}
+
+void DungeonCoreDestructible::die(Actor *owner, Actor *killer) {
+  engine.gui->message(TCODColor::red, "%s is broken by %s.", owner->name, killer->name);
+  engine.gui->message(TCODColor::red, "Your dungeon is captured. Game over.");
+
+  engine.gameStatus = Engine::DEFEAT;
+
+  owner->ch = 'x';
+  owner->col = TCODColor::darkRed;
+  owner->name = corpseName;
+  owner->blocks = false;
+
+  owner->currentFloor->sendToBack(owner);
+}
+
+TrapDestructible::TrapDestructible() : Destructible(0, 0, "trap", 0) {}
+
+void TrapDestructible::save(Saver &saver) {
+  saver.putInt(TRAP);
+  Destructible::save(saver);
+}
+
+void TrapDestructible::die(Actor *owner, Actor *killer) {}

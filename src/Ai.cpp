@@ -672,6 +672,67 @@ Actor *AdventurerAi::chooseFromInventory(Actor *owner) {
   return NULL;
 }
 
+SpikeAi::SpikeAi(int rechargeTime) :
+  charged(true), rechargeTime(rechargeTime),
+  rechargeTimer(rechargeTime), target(NULL) {}
+
+
+void SpikeAi::update(Actor *owner) {
+  if(!charged) {
+    rechargeTimer --;
+    if(rechargeTimer <= 0) {
+      rechargeTimer = rechargeTime;
+      charged = true;
+    }
+  } else {
+    rechargeTimer = rechargeTime;
+  }
+
+  if(target && (target->getX() != owner->x || target->getY() != owner->y)) {
+    delete target;
+    target = NULL;
+  }
+
+  if(!target || target->isDead()) {
+    Actor *enemy = owner->currentFloor->getEnemy(owner->x, owner->y);
+    if(enemy) {
+      if(target) delete target;
+      target = new ActorTarget(enemy);
+    }
+  }
+
+  if(!target) return;
+  
+  moveOrAttack(owner, target->getX(), target->getY());
+}
+
+bool SpikeAi::moveOrAttack(Actor *owner, int targetx, int targety) {
+  int dx = targetx - owner->x;
+  int dy = targety - owner->y;
+
+  if(dx == 0 && dy == 0 && owner->attacker) {
+    Actor *enemy = owner->currentFloor->getEnemy(targetx, targety);
+    if(enemy && enemy->isEnemy) {
+      if(charged) {
+	owner->attacker->attack(owner, enemy);
+	charged = false;
+      }
+    }
+  }
+}
+
+
+void SpikeAi::save(Saver &saver) {
+  saver.putInt(SPIKE_TRAP);
+  saver.putInt(rechargeTime);
+  saver.putInt(rechargeTimer);
+}
+
+void SpikeAi::load(Saver &saver) {
+  rechargeTime = saver.getInt();
+  rechargeTimer = saver.getInt();
+}
+
 
 ConfusedMonsterAi::ConfusedMonsterAi(int nbTurns, Ai *oldAi) : nbTurns(nbTurns), oldAi(oldAi) {
 }
@@ -710,3 +771,16 @@ void ConfusedMonsterAi::save(Saver &saver) {
   saver.putInt(nbTurns);
   oldAi->save(saver);
 }
+
+
+DungeonCoreAi::DungeonCoreAi() {}
+
+void DungeonCoreAi::update(Actor *owner) {
+}
+
+void DungeonCoreAi::load(Saver &saver) {}
+
+void DungeonCoreAi::save(Saver &saver) {
+  saver.putInt(DUNGEON_CORE);
+}
+

@@ -48,6 +48,15 @@ Actor *Floor::getActor(int x, int y) const {
   return NULL;
 }
 
+Actor *Floor::getEnemy(int x, int y) const {
+  for(auto actor: actors) {
+    if(actor->x == x && actor->y == y && actor->destructible && !actor->destructible->isDead() &&
+       actor->isEnemy)
+      return actor;
+  }
+  return NULL;
+}
+
 Actor * Floor::getClosestMonster(int x, int y, float range) const {
   Actor *closest=NULL;
   float bestDistance=1E6f;
@@ -78,4 +87,51 @@ Actor *Floor::getEnemyInFov(int x, int y) const {
       return actor;
   }
   return NULL;
+}
+
+void Floor::addCore(Actor *core) {
+  static const int moveMask[4][2] = {
+    {0, 1},
+    {1, 0},
+    {0, -1},
+    {-1, 0}
+  };
+  std::queue<std::pair<int, int>> q;
+  int width = map->width;
+  int height = map->height;
+
+  bool used[width][height];
+  for(int x = 0; x < width; x++) {
+    for(int y = 0; y < height; y++) {
+      used[x][y] = false;
+    }
+  }
+
+  used[map->entryx][map->entryy] = true;
+  q.push({map->entryx, map->entryy});
+
+  int lastx, lasty;
+
+  while(q.size() > 0) {
+    std::pair<int, int> node = q.front();
+    q.pop();
+    int nodex = node.first;
+    int nodey = node.second;
+    lastx = nodex;
+    lasty = nodey;
+    
+    for(int i = 0; i < 4; i++) {
+      int nextx = nodex + moveMask[i][0];
+      int nexty = nodey + moveMask[i][1];
+      if(!used[nextx][nexty] && !map->isWall(nextx, nexty)) {
+	used[nextx][nexty] = true;
+	q.push({nextx, nexty});
+      }
+    }
+  }
+
+  core->x = lastx;
+  core->y = lasty;
+
+  actors.push(core);
 }

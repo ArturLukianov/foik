@@ -8,7 +8,7 @@ public:
 
   Destructible(float maxHp, float defense, const char *corpseName, int xp);
   virtual ~Destructible();
-  inline bool isDead() { return hp <= 0; }
+  virtual inline bool isDead() { return hp <= 0; }
   float takeDamage(Actor *owner, Actor *dealer, float damage);
   float countDamage(Actor *owner, float damage);
   virtual void die(Actor *owner, Actor *killer);
@@ -19,7 +19,7 @@ public:
   static Destructible *create(Saver &saver);
 protected:
   enum DestructibleType {
-			 MONSTER, ADVENTURER, CONSTRUCTION
+			 MONSTER, ADVENTURER, CONSTRUCTION, DUNGEON_CORE, TRAP
   };
 };
 
@@ -41,6 +41,21 @@ public:
 class ConstructionDestructible : public Destructible {
 public:
   ConstructionDestructible(float maxHp, float defense, const char *corpseName);
+  void die(Actor *owner, Actor *killer);
+  void save(Saver &saver);
+};
+
+class DungeonCoreDestructible : public Destructible {
+public:
+  DungeonCoreDestructible(float maxHp, float defense, const char *corpseName);
+  void die(Actor *owner, Actor *killer);
+  void save(Saver &saver);
+};
+
+class TrapDestructible : public Destructible {
+public:
+  TrapDestructible();
+  virtual inline bool isDead() { return true; }
   void die(Actor *owner, Actor *killer);
   void save(Saver &saver);
 };

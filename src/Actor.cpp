@@ -1,7 +1,7 @@
 #include "main.hpp"
 
 Actor::Actor(Floor *currentFloor, int x, int y, int ch, const char *name, const TCODColor &col) :
-  currentFloor(currentFloor), x(x), y(y), ch(ch), name(name), col(col), blocks(true), fovOnly(true), attacker(NULL), destructible(NULL), ai(NULL),
+  currentFloor(currentFloor), x(x), y(y), ch(ch), name(name), col(col), blocks(true), attacker(NULL), destructible(NULL), ai(NULL),
   pickable(NULL), container(NULL), portal(NULL), isEnemy(false) {
 }
 
@@ -48,7 +48,6 @@ void Actor::save(Saver &saver) {
   saver.putColor(&col);
   saver.putString(name);
   saver.putInt(blocks);
-  saver.putInt(fovOnly);
   saver.putInt(isEnemy);
   saver.putInt(attacker != NULL);
   saver.putInt(destructible != NULL);
@@ -71,7 +70,6 @@ void Actor::load(Saver &saver) {
   col = saver.getColor();
   name = strdup(saver.getString());
   blocks = saver.getInt();
-  fovOnly = saver.getInt();
   isEnemy = saver.getInt();
   bool hasAttacker = saver.getInt();
   bool hasDestructible = saver.getInt();

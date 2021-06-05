@@ -12,11 +12,14 @@ public:
     PAUSE
   };
 
+  Menu();
   ~Menu();
   void clear();
   void addItem(MenuItemCode code, const char *label);
+  void setText(char *newText);
   MenuItemCode pick(DisplayMode mode);
 protected:
+  char *text;
   struct MenuItem {
     MenuItemCode code;
     const char *label;

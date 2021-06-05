@@ -97,7 +97,10 @@ void Gui::handleActionKey(char key) {
     }
   } else if(sideMenu == BUILD) {
     switch(key) {
-    case 'c':
+    case 'c': {
+      if(engine.dp < 100) {
+	break;
+      }
       int x, y;
       if(engine.pickATile(&x, &y)) {
 	Actor *crossbow = new Actor(engine.currentFloor, x, y, '}', "crossbow", TCODColor::violet);
@@ -106,9 +109,28 @@ void Gui::handleActionKey(char key) {
 	crossbow->destructible = new ConstructionDestructible(2, 0, "broken crossbow");
 	crossbow->ai = new RangedConstructionAi(2, 10, 5.0f);
 	engine.currentFloor->actors.push(crossbow);
+	engine.dp -= 100;
       }
       sideMenu = MAIN;
       break;
+    }
+    case 's': {
+      if(engine.dp < 10) {
+	break;
+      }
+      int x, y;
+      if(engine.pickATile(&x, &y)) {
+	Actor *crossbow = new Actor(engine.currentFloor, x, y, '^', "spike", TCODColor::violet);
+	crossbow->blocks = false;
+	crossbow->attacker = new Attacker(2);
+	crossbow->ai = new SpikeAi(2);
+	crossbow->destructible = new TrapDestructible();
+	engine.currentFloor->actors.push(crossbow);
+	engine.dp -= 10;
+      }
+      sideMenu = MAIN;
+      break;
+    }
     }
   }
 }
@@ -145,7 +167,12 @@ void Gui::renderBuildMenu() {
   TCODConsole::root->setDefaultForeground(TCODColor::lightGreen);
   TCODConsole::root->print(MSG_X, 5, "c");
   TCODConsole::root->setDefaultForeground(TCODColor::white);
-  TCODConsole::root->print(MSG_X + 2, 5, "- crossbow");
+  TCODConsole::root->print(MSG_X + 2, 5, "- crossbow (100 DP)");
+  
+  TCODConsole::root->setDefaultForeground(TCODColor::lightGreen);
+  TCODConsole::root->print(MSG_X, 6, "s");
+  TCODConsole::root->setDefaultForeground(TCODColor::white);
+  TCODConsole::root->print(MSG_X + 2, 6, "- spike (10 DP)");
 }
 
 void Gui::renderBar(int x, int y, int width, const char *name,
@@ -227,12 +254,18 @@ void Gui::load(Saver &saver) {
 }
 
 
+
+Menu::Menu() {
+  text = NULL;
+}
+
 Menu::~Menu() {
   clear();
 }
 
 void Menu::clear() {
   items.clearAndDelete();
+  text = NULL;
 }
 
 void Menu::addItem(MenuItemCode code, const char *label) {
@@ -240,6 +273,10 @@ void Menu::addItem(MenuItemCode code, const char *label) {
   item->code = code;
   item->label = label;
   items.push(item);
+}
+
+void Menu::setText(char *newText) {
+  text = newText;
 }
 
 const int PAUSE_MENU_WIDTH = 30;
@@ -263,13 +300,20 @@ Menu::MenuItemCode Menu::pick(DisplayMode mode) {
     }
     menux += 2;
     menuy += 3;
+
+    if(text) {
+      TCODConsole::root->setDefaultForeground(TCODColor(255, 255, 0));
+      TCODConsole::root->print(menux, menuy, text);
+      menuy += 4;
+    }
+    
     for(auto item : items) {
       if(currentItem == selectedItem) {
 	TCODConsole::root->setDefaultForeground(TCODColor::lightOrange);
       } else {
 	TCODConsole::root->setDefaultForeground(TCODColor::lightGrey);
       }
-      TCODConsole::root->print(menux, menuy+currentItem * 3, item->label);
+      TCODConsole::root->print(menux, menuy+currentItem * 2, item->label);
       currentItem++;
     }
     TCODConsole::flush();
