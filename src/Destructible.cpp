@@ -66,7 +66,8 @@ Destructible *Destructible::create(Saver &saver) {
   Destructible *destructible = NULL;
   switch(type) {
   case MONSTER: destructible = new MonsterDestructible(0.0f, 0.0f, "", 0); break;
-  case PLAYER: destructible = new PlayerDestructible(0.0f, 0.0f, ""); break;
+  case ADVENTURER: destructible = new AdventurerDestructible(0.0f, 0.0f, ""); break;
+  case CONSTRUCTION: destructible = new ConstructionDestructible(0.0f, 0.0f, ""); break;
   }
   destructible->load(saver);
   return destructible;
@@ -93,7 +94,13 @@ ConstructionDestructible::ConstructionDestructible(float maxHp, float defense, c
 
 void ConstructionDestructible::die(Actor *owner, Actor *killer) {
   engine.gui->message(TCODColor::red, "%s is broken by %s.", owner->name, killer->name);
-  Destructible::die(owner, killer);
+
+  owner->ch = '&';
+  owner->col = TCODColor::darkerViolet;
+  owner->name = corpseName;
+  owner->blocks = false;
+
+  owner->currentFloor->sendToBack(owner);
 }
 
 
@@ -103,15 +110,15 @@ void ConstructionDestructible::save(Saver &saver) {
 }
 
 
-PlayerDestructible::PlayerDestructible(float maxHp, float defense, const char *corpseName) :
+AdventurerDestructible::AdventurerDestructible(float maxHp, float defense, const char *corpseName) :
   Destructible(maxHp, defense, corpseName, 0) {}
 
-void PlayerDestructible::save(Saver &saver) {
-  saver.putInt(PLAYER);
+void AdventurerDestructible::save(Saver &saver) {
+  saver.putInt(ADVENTURER);
   Destructible::save(saver);
 }
 
-void PlayerDestructible::die(Actor *owner, Actor *killer) { 
+void AdventurerDestructible::die(Actor *owner, Actor *killer) { 
   engine.gui->message(TCODColor::red, "%s is dead. %s gain %d xp", owner->name, killer->name, xp);
   killer->destructible->xp += xp;
   Destructible::die(owner, killer);

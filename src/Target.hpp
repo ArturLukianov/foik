@@ -3,6 +3,7 @@ public:
   virtual int getX() = 0;
   virtual int getY() = 0;
   virtual bool isDead() = 0;
+  virtual Floor *getFloor() = 0;
 };
 
 
@@ -12,5 +13,6 @@ public:
   ActorTarget(Actor *actor);
   int getX();
   int getY();
+  Floor *getFloor();
   bool isDead();
 };

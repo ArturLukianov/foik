@@ -8,24 +8,25 @@ Ai * Ai::create(Saver &saver) {
   AiType type = (AiType) saver.getInt();
   Ai *ai = NULL;
   switch(type) {
-  case PLAYER: ai = new PlayerAi(); break;
+  case ADVENTURER: ai = new AdventurerAi(); break;
   case MONSTER: ai = new MonsterAi(); break;
   case CONFUSED_MONSTER: ai = new ConfusedMonsterAi(0, NULL); break;
+  case RANGED_CONSTRUCTION: ai = new RangedConstructionAi(0, 0, 0); break;
   }
   ai->load(saver);
   return ai;
 }
 
-PlayerAi::PlayerAi() : xpLevel(1), state(EXPLORE), target(NULL) {}
+AdventurerAi::AdventurerAi() : xpLevel(1), state(EXPLORE), target(NULL) {}
 
 const int LEVEL_UP_BASE = 5;
 const int LEVEL_UP_FACTOR = 10;
 
-int PlayerAi::getNextLevelXp() {
+int AdventurerAi::getNextLevelXp() {
   return LEVEL_UP_BASE + LEVEL_UP_FACTOR * xpLevel;
 }
 
-void PlayerAi::update(Actor *owner) {
+void AdventurerAi::update(Actor *owner) {
   int levelUpXp = getNextLevelXp();
   if(owner->destructible->xp >= levelUpXp) {
     xpLevel++;
@@ -120,7 +121,6 @@ void PlayerAi::update(Actor *owner) {
       if(dx == 0 && dy == 0) {
 	Actor *actor = owner->currentFloor->getPortal(owner->x, owner->y);
 	if(actor) {
-	  printf("Portal found, using it..\n");
 	  actor->portal->warp(actor, owner);
 	}
 	state = EXPLORE;
@@ -134,7 +134,7 @@ void PlayerAi::update(Actor *owner) {
   }
 }
 
-bool PlayerAi::isItemInFov(Actor *owner) {
+bool AdventurerAi::isItemInFov(Actor *owner) {
   owner->currentFloor->map->computeFov(owner);
   for(auto actor : owner->currentFloor->actors) {
     if(actor->pickable && owner->currentFloor->map->isInFov(actor->x, actor->y)) {
@@ -144,7 +144,7 @@ bool PlayerAi::isItemInFov(Actor *owner) {
   return false;
 }
 
-bool PlayerAi::isMonsterInFov(Actor *owner) {
+bool AdventurerAi::isMonsterInFov(Actor *owner) {
   owner->currentFloor->map->computeFov(owner);
   for(auto actor : owner->currentFloor->actors) {
     if(actor->destructible && !actor->destructible->isDead() && owner->currentFloor->map->isInFov(actor->x, actor->y) && actor != owner) {
@@ -154,7 +154,7 @@ bool PlayerAi::isMonsterInFov(Actor *owner) {
   return false;
 }
 
-bool PlayerAi::isMonsterOnTile(Actor *owner, int x, int y) {
+bool AdventurerAi::isMonsterOnTile(Actor *owner, int x, int y) {
   for(auto actor : owner->currentFloor->actors) {
     if(actor->destructible && !actor->destructible->isDead() && actor->x == x && actor->y == y && actor != owner) {
       return true;
@@ -163,7 +163,7 @@ bool PlayerAi::isMonsterOnTile(Actor *owner, int x, int y) {
   return false;
 }
 
-bool PlayerAi::getExploreMove(Actor *owner, int *dx, int *dy) {
+bool AdventurerAi::getExploreMove(Actor *owner, int *dx, int *dy) {
   static const int moveMask[4][2] = {
     {0, 1},
     {1, 0},
@@ -223,7 +223,7 @@ bool PlayerAi::getExploreMove(Actor *owner, int *dx, int *dy) {
   return found;
 }
 
-void PlayerAi::getItemInFovPos(Actor *owner, int *x, int *y) {
+void AdventurerAi::getItemInFovPos(Actor *owner, int *x, int *y) {
   for(auto actor : owner->currentFloor->actors) {
     if(actor->pickable && owner->currentFloor->map->isInFov(actor->x, actor->y)) {
       (*x) = actor->x;
@@ -233,7 +233,7 @@ void PlayerAi::getItemInFovPos(Actor *owner, int *x, int *y) {
   }
 }
 
-Actor * PlayerAi::getItemInFov(Actor *owner) {
+Actor * AdventurerAi::getItemInFov(Actor *owner) {
   for(auto actor : owner->currentFloor->actors) {
     if(actor->pickable && owner->currentFloor->map->isInFov(actor->x, actor->y)) {
       return actor;
@@ -241,7 +241,7 @@ Actor * PlayerAi::getItemInFov(Actor *owner) {
   }
 }
 
-bool PlayerAi::getPickMove(Actor *owner, int *dx, int *dy) {
+bool AdventurerAi::getPickMove(Actor *owner, int *dx, int *dy) {
   static const int moveMask[4][2] = {
     {0, 1},
     {1, 0},
@@ -303,7 +303,7 @@ bool PlayerAi::getPickMove(Actor *owner, int *dx, int *dy) {
 }
 
 
-void PlayerAi::getMonsterInFovPos(Actor *owner, int *x, int *y) {
+void AdventurerAi::getMonsterInFovPos(Actor *owner, int *x, int *y) {
   for(auto actor : owner->currentFloor->actors) {
     if(actor->destructible && !actor->destructible->isDead() && owner->currentFloor->map->isInFov(actor->x, actor->y) && actor != owner) {
       (*x) = actor->x;
@@ -313,7 +313,7 @@ void PlayerAi::getMonsterInFovPos(Actor *owner, int *x, int *y) {
   }
 }
 
-Actor * PlayerAi::getMonsterInFov(Actor *owner) {
+Actor * AdventurerAi::getMonsterInFov(Actor *owner) {
   for(auto actor : owner->currentFloor->actors) {
     if(actor->destructible && !actor->destructible->isDead() && owner->currentFloor->map->isInFov(actor->x, actor->y) && actor != owner) {
       return actor;
@@ -321,7 +321,7 @@ Actor * PlayerAi::getMonsterInFov(Actor *owner) {
   }
 }
 
-bool PlayerAi::getAttackMove(Actor *owner, int *dx, int *dy) {
+bool AdventurerAi::getAttackMove(Actor *owner, int *dx, int *dy) {
   static const int moveMask[4][2] = {
     {0, 1},
     {1, 0},
@@ -383,7 +383,7 @@ bool PlayerAi::getAttackMove(Actor *owner, int *dx, int *dy) {
 }
 
 
-bool PlayerAi::moveOrAttack(Actor *owner, int targetx, int targety) {
+bool AdventurerAi::moveOrAttack(Actor *owner, int targetx, int targety) {
   if(owner->currentFloor->map->isWall(targetx, targety)) return false;
 
   for(auto actor : owner->currentFloor->actors) {
@@ -399,7 +399,7 @@ bool PlayerAi::moveOrAttack(Actor *owner, int targetx, int targety) {
   return true;
 }
 
-void PlayerAi::pickItemFromTile(Actor *owner) {
+void AdventurerAi::pickItemFromTile(Actor *owner) {
   bool found=false;
   for(auto actor : owner->currentFloor->actors) {
     if(actor->pickable && actor->x == owner->x && actor->y == owner->y) {
@@ -414,7 +414,7 @@ void PlayerAi::pickItemFromTile(Actor *owner) {
   }
 }
 
-bool PlayerAi::getNextFloorPortal(Actor *owner, int *x, int *y) {
+bool AdventurerAi::getNextFloorPortal(Actor *owner, int *x, int *y) {
   for(auto actor : owner->currentFloor->actors) {
     if(actor->portal && actor->ch == '>') {
       (*x) = actor->x;
@@ -425,7 +425,7 @@ bool PlayerAi::getNextFloorPortal(Actor *owner, int *x, int *y) {
   return false;
 }
 
-bool PlayerAi::getPortalMove(Actor *owner, int *dx, int *dy) {
+bool AdventurerAi::getPortalMove(Actor *owner, int *dx, int *dy) {
   static const int moveMask[4][2] = {
     {0, 1},
     {1, 0},
@@ -486,12 +486,12 @@ bool PlayerAi::getPortalMove(Actor *owner, int *dx, int *dy) {
 }
 
 
-void PlayerAi::save(Saver &saver) {
-  saver.putInt(PLAYER);
+void AdventurerAi::save(Saver &saver) {
+  saver.putInt(ADVENTURER);
   saver.putInt(xpLevel);
 }
 
-void PlayerAi::load(Saver &saver) {
+void AdventurerAi::load(Saver &saver) {
   xpLevel = saver.getInt();
 }
 
@@ -501,8 +501,8 @@ MonsterAi::MonsterAi() : moveCount(0), target(NULL) {}
 
 void MonsterAi::update(Actor *owner) {
   if(owner->destructible && owner->destructible->isDead()) return;
-
-  if(!target || target->isDead()) {
+  
+  if(!target) {
     Actor *enemy = owner->currentFloor->getEnemyInFov(owner->x, owner->y);
     if(enemy) {
       if(target) delete target;
@@ -520,6 +520,11 @@ void MonsterAi::update(Actor *owner) {
 
   if(moveCount > 0) {
     moveOrAttack(owner, target->getX(), target->getY());
+  }
+  
+  if(target->isDead() || target->getFloor() != owner->currentFloor) {
+    delete target;
+    target = NULL;
   }
 }
 
@@ -571,7 +576,7 @@ void RangedConstructionAi::update(Actor *owner) {
   if(owner->destructible && owner->destructible->isDead()) return;
 
   if(bolts < maxBolts) {
-    rechargeTimer ++;
+    rechargeTimer --;
     if(rechargeTimer <= 0) {
       rechargeTimer = boltRechargeTime;
       bolts++;
@@ -618,14 +623,22 @@ void RangedConstructionAi::save(Saver &saver) {
   saver.putInt(RANGED_CONSTRUCTION);
   saver.putInt(maxBolts);
   saver.putInt(bolts);
+  saver.putInt(boltRechargeTime);
+  saver.putInt(rechargeTimer);
+  saver.putFloat(range);
 }
 
 void RangedConstructionAi::load(Saver &saver) {
+  maxBolts = saver.getInt();
+  bolts = saver.getInt();
+  boltRechargeTime = saver.getInt();
+  rechargeTimer = saver.getInt();
+  range = saver.getFloat();
 }
 
 
 
-Actor *PlayerAi::chooseFromInventory(Actor *owner) {
+Actor *AdventurerAi::chooseFromInventory(Actor *owner) {
   static const int INVENTORY_WIDTH=50;
   static const int INVENTORY_HEIGHT=28;
   static TCODConsole con(INVENTORY_WIDTH,INVENTORY_HEIGHT);

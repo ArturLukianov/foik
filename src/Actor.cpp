@@ -11,6 +11,7 @@ Actor::~Actor() {
   if(ai) delete ai;
   if(pickable) delete pickable;
   if(container) delete container;
+  if(portal) delete portal;
 }
 
 void Actor::render() const {
@@ -48,6 +49,7 @@ void Actor::save(Saver &saver) {
   saver.putString(name);
   saver.putInt(blocks);
   saver.putInt(fovOnly);
+  saver.putInt(isEnemy);
   saver.putInt(attacker != NULL);
   saver.putInt(destructible != NULL);
   saver.putInt(ai != NULL);
@@ -70,6 +72,7 @@ void Actor::load(Saver &saver) {
   name = strdup(saver.getString());
   blocks = saver.getInt();
   fovOnly = saver.getInt();
+  isEnemy = saver.getInt();
   bool hasAttacker = saver.getInt();
   bool hasDestructible = saver.getInt();
   bool hasAi = saver.getInt();

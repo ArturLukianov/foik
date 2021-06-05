@@ -30,6 +30,9 @@ void Gui::render() {
 
   statsCon->setDefaultForeground(TCODColor::white);
   statsCon->print(1, 1, "Monsters: %d", engine.countMonsters());
+  
+  statsCon->setDefaultForeground(TCODColor::white);
+  statsCon->print(1, 3, "DP: %d", engine.dp);
 
   if(engine.gameStatus == Engine::PAUSED) {
     statsCon->setDefaultBackground(TCODColor::darkerYellow);
@@ -104,6 +107,7 @@ void Gui::handleActionKey(char key) {
 	crossbow->ai = new RangedConstructionAi(2, 10, 5.0f);
 	engine.currentFloor->actors.push(crossbow);
       }
+      sideMenu = MAIN;
       break;
     }
   }

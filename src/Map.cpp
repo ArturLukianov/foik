@@ -150,11 +150,11 @@ void Map::render() const {
 
   for (int x = 0; x < width; x++) {
     for (int y = 0; y < height; y++) {
-      //      if(isInFov(x, y)) {
+      //      if(isExplored(x, y)) {
 	TCODConsole::root->setCharBackground(x, y, isWall(x, y) ? lightWall : lightGround);
-	/*} else if (isExplored(x, y)) {
-	TCODConsole::root->setCharBackground(x, y, isWall(x, y) ? darkWall : darkGround);
-	}*/
+	//      } else {
+	//TCODConsole::root->setCharBackground(x, y, isWall(x, y) ? darkWall : darkGround);
+	//      }
     }
   }
 }

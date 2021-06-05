@@ -16,3 +16,7 @@ int ActorTarget::getY() {
 bool ActorTarget::isDead() {
   return actor->destructible && actor->destructible->isDead();
 }
+
+Floor *ActorTarget::getFloor() {
+  return actor->currentFloor;
+}

@@ -5,26 +5,26 @@ public:
   static Ai * create(Saver &saver);
 protected:
   enum AiType {
-	       PLAYER, MONSTER, CONFUSED_MONSTER, RANGED_CONSTRUCTION
+	       ADVENTURER, MONSTER, CONFUSED_MONSTER, RANGED_CONSTRUCTION
   };
 };
 
 
-class PlayerAi : public Ai {
+class AdventurerAi : public Ai {
 public:
-  enum PlayerState {
+  enum AdventurerState {
     EXPLORE,
     PICK_ITEM,
     ATTACK_MONSTER,
     NEXT_FLOOR
   };
 
-  PlayerState state;
+  AdventurerState state;
 
   Target *target;
   
   int xpLevel;
-  PlayerAi();
+  AdventurerAi();
   int getNextLevelXp();
   //void handleActionKey(Actor *owner, int ascii);
   Actor *chooseFromInventory(Actor *owner);

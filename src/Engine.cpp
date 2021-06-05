@@ -7,11 +7,12 @@ static int intrusionTimer;
 
 
 Engine::Engine(int screenWidth, int screenHeight) : gameStatus(STARTUP), fovRadius(10),
-						    screenWidth(screenWidth), screenHeight(screenHeight) {
-  TCODConsole::initRoot(screenWidth, screenHeight, "foik", true);
+						    screenWidth(screenWidth), screenHeight(screenHeight),
+						    dp(100), lastTurnTime(0)
+{
+  TCODConsole::initRoot(screenWidth, screenHeight, "foik", false);
   TCODMouse::showCursor(true);
   gui = new Gui();
-  lastTurnTime = 0;
   intrusionTimer = TCODRandom::getInstance()->getInt(10, 100);
 }
 
@@ -38,7 +39,7 @@ int Engine::getFloorIndex(Floor *needle) const {
 }
 
 void Engine::init() {
-  int nbFloors = TCODRandom::getInstance()->getInt(4,8);
+  int nbFloors = TCODRandom::getInstance()->getInt(2,4);
 
   while(nbFloors > 0) {
     Floor *floor = new Floor();
@@ -250,18 +251,18 @@ int Engine::countMonsters() const {
 }
 
 void Engine::spawnIntruder() {
-  Actor *player = new Actor(currentFloor, 40, 25, '@', "adventurer", TCODColor::white);
-  player->destructible = new PlayerDestructible(TCODRandom::getInstance()->getInt(5, 10), 2, "human corpse");
-  player->attacker = new Attacker(TCODRandom::getInstance()->getInt(1, 5));
-  player->ai = new PlayerAi();
-  player->container = new Container(26);
-  player->isEnemy = true;
+  Actor *adventurer = new Actor(currentFloor, 40, 25, '@', "adventurer", TCODColor::white);
+  adventurer->destructible = new AdventurerDestructible(TCODRandom::getInstance()->getInt(5, 10), 2, "human corpse");
+  adventurer->attacker = new Attacker(TCODRandom::getInstance()->getInt(1, 5));
+  adventurer->ai = new AdventurerAi();
+  adventurer->container = new Container(26);
+  adventurer->isEnemy = true;
 
   Floor *firstFloor = floors.get(0);
   
-  player->x = firstFloor->map->entryx;
-  player->y = firstFloor->map->entryy;
-  player->currentFloor = firstFloor;
+  adventurer->x = firstFloor->map->entryx;
+  adventurer->y = firstFloor->map->entryy;
+  adventurer->currentFloor = firstFloor;
 
-  firstFloor->actors.push(player);
+  firstFloor->actors.push(adventurer);
 }
