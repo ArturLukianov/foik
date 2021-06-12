@@ -13,7 +13,7 @@ Engine::Engine(int screenWidth, int screenHeight) : gameStatus(STARTUP), fovRadi
   TCODConsole::initRoot(screenWidth, screenHeight, "foik", true);
   TCODMouse::showCursor(true);
   gui = new Gui();
-  intrusionTimer = TCODRandom::getInstance()->getInt(10, 100);
+  intrusionTimer = TCODRandom::getInstance()->getInt(100, 300);
 }
 
 Engine::~Engine() {
@@ -40,7 +40,7 @@ int Engine::getFloorIndex(Floor *needle) const {
 
 void Engine::init() {
   dp = 100;
-  int nbFloors = TCODRandom::getInstance()->getInt(2,4);
+  int nbFloors = 1;//TCODRandom::getInstance()->getInt(2,4);
 
   while(nbFloors > 0) {
     Floor *floor = new Floor();
@@ -149,7 +149,7 @@ void Engine::update() {
       lastTurnTime = ms;
       intrusionTimer--;
       if(intrusionTimer <= 0) {
-	  intrusionTimer = TCODRandom::getInstance()->getInt(10, 100);
+	  intrusionTimer = TCODRandom::getInstance()->getInt(100, 300);
 	  spawnIntruder();
 	  gui->message(TCODColor::darkRed, "Someone intruded your dungeon!");
       }

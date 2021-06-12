@@ -12,6 +12,8 @@ Ai * Ai::create(Saver &saver) {
   case MONSTER: ai = new MonsterAi(); break;
   case CONFUSED_MONSTER: ai = new ConfusedMonsterAi(0, NULL); break;
   case RANGED_CONSTRUCTION: ai = new RangedConstructionAi(0, 0, 0); break;
+  case DUNGEON_CORE: ai = new DungeonCoreAi(); break;
+  case SPIKE_TRAP: ai = new SpikeAi(0); break;
   }
   ai->load(saver);
   return ai;
@@ -147,7 +149,7 @@ bool AdventurerAi::isItemInFov(Actor *owner) {
 bool AdventurerAi::isMonsterInFov(Actor *owner) {
   owner->currentFloor->map->computeFov(owner);
   for(auto actor : owner->currentFloor->actors) {
-    if(actor->destructible && !actor->destructible->isDead() && owner->currentFloor->map->isInFov(actor->x, actor->y) && actor != owner) {
+    if(actor->destructible && !actor->destructible->isDead() && owner->currentFloor->map->isInFov(actor->x, actor->y) && actor != owner && !actor->isEnemy) {
       return true;
     }
   }
@@ -305,7 +307,7 @@ bool AdventurerAi::getPickMove(Actor *owner, int *dx, int *dy) {
 
 void AdventurerAi::getMonsterInFovPos(Actor *owner, int *x, int *y) {
   for(auto actor : owner->currentFloor->actors) {
-    if(actor->destructible && !actor->destructible->isDead() && owner->currentFloor->map->isInFov(actor->x, actor->y) && actor != owner) {
+    if(actor->destructible && !actor->destructible->isDead() && owner->currentFloor->map->isInFov(actor->x, actor->y) && actor != owner && !actor->isEnemy) {
       (*x) = actor->x;
       (*y) = actor->y;
       break;
@@ -315,7 +317,7 @@ void AdventurerAi::getMonsterInFovPos(Actor *owner, int *x, int *y) {
 
 Actor * AdventurerAi::getMonsterInFov(Actor *owner) {
   for(auto actor : owner->currentFloor->actors) {
-    if(actor->destructible && !actor->destructible->isDead() && owner->currentFloor->map->isInFov(actor->x, actor->y) && actor != owner) {
+    if(actor->destructible && !actor->destructible->isDead() && owner->currentFloor->map->isInFov(actor->x, actor->y) && actor != owner && !actor->isEnemy) {
       return actor;
     }
   }
@@ -388,7 +390,7 @@ bool AdventurerAi::moveOrAttack(Actor *owner, int targetx, int targety) {
 
   for(auto actor : owner->currentFloor->actors) {
     if(actor->destructible && !actor->destructible->isDead() &&
-       actor->x == targetx && actor->y == targety && actor != owner) {
+       actor->x == targetx && actor->y == targety && actor != owner && !actor->isEnemy) {
       owner->attacker->attack(owner, actor);
       return false;
     }

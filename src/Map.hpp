@@ -17,6 +17,7 @@ public:
 
   bool isInFov(int x, int y) const;
   bool isExplored(int x, int y) const;
+  bool isEmptyNear(int x, int y) const;
   void explore(int x, int y);
   void computeFov(Actor *actor);
   void computeFov(int x, int y);

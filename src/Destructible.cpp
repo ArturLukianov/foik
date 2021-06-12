@@ -68,6 +68,8 @@ Destructible *Destructible::create(Saver &saver) {
   case MONSTER: destructible = new MonsterDestructible(0.0f, 0.0f, "", 0); break;
   case ADVENTURER: destructible = new AdventurerDestructible(0.0f, 0.0f, ""); break;
   case CONSTRUCTION: destructible = new ConstructionDestructible(0.0f, 0.0f, ""); break;
+  case TRAP: destructible = new TrapDestructible(); break;
+  case DUNGEON_CORE: destructible = new DungeonCoreDestructible(0.0f, 0.0f, ""); break;
   }
   destructible->load(saver);
   return destructible;
@@ -121,7 +123,7 @@ void AdventurerDestructible::save(Saver &saver) {
 void AdventurerDestructible::die(Actor *owner, Actor *killer) { 
   engine.gui->message(TCODColor::red, "%s is dead. %s gain %d xp", owner->name, killer->name, xp);
   killer->destructible->xp += xp;
-  engine.gui->message(TCODColor::red, "%d DP earned from kill", (xp + 1) / 2);
+  engine.gui->message(TCODColor::red, "%d dp earned from kill", (xp + 1) / 2);
   engine.dp += (xp + 1) / 2;
   Destructible::die(owner, killer);
 }

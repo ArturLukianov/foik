@@ -70,6 +70,18 @@ bool Map::isExplored(int x, int y) const {
   return tiles[x + y * width].explored;
 }
 
+bool Map::isEmptyNear(int x, int y) const {
+  for(int i = -1; i < 2; i++) {
+    for(int j = -1; j < 2; j++) {
+      int nx = x + i;
+      int ny = y + j;
+      if(nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+      if(!isWall(nx, ny)) return true;
+    }
+  }
+  return false;
+}
+
 bool Map::isInFov(int x, int y) const {
   if(x < 0 || y < 0 || x >= width || y >= height) return false;
   if(map->isInFov(x, y)) {
@@ -143,18 +155,16 @@ void Map::createRoom(bool first, int x1, int y1, int x2, int y2, bool withActors
 }
 
 void Map::render() const {
-  static const TCODColor darkWall(0, 0, 100);
-  static const TCODColor darkGround(50, 50, 100);
-  static const TCODColor lightWall(130, 110, 50);
-  static const TCODColor lightGround(200, 180, 50);
+  static const TCODColor wallColor(130, 110, 50);
+  static const TCODColor groundColor(200, 180, 50);
 
   for (int x = 0; x < width; x++) {
     for (int y = 0; y < height; y++) {
-      //      if(isExplored(x, y)) {
-	TCODConsole::root->setCharBackground(x, y, isWall(x, y) ? lightWall : lightGround);
-	//      } else {
-	//TCODConsole::root->setCharBackground(x, y, isWall(x, y) ? darkWall : darkGround);
-	//      }
+      if(isWall(x, y) && isEmptyNear(x, y)) {
+	TCODConsole::root->setCharBackground(x, y, wallColor);
+      } else if (!isWall(x, y)) {
+	TCODConsole::root->setCharBackground(x, y, groundColor);
+      }
     }
   }
 }
